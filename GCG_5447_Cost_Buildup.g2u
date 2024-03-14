@@ -1,0 +1,1644 @@
+﻿Program.Sub.ScreenSU.Start
+Gui.Form..Create
+Gui.Form..Caption("Build Cost and Quote")
+Gui.Form..Size(7245,2115)
+Gui.Form..MinX(0)
+Gui.Form..MinY(0)
+Gui.Form..Position(0,0)
+Gui.Form..BackColor(-2147483633)
+Gui.Form..MousePointer(0)
+Gui.Form..Event(UnLoad,Form_UnLoad)
+Gui.Form.lbl1.Create(Label,"Customer",True,855,255,0,210,225,True,0,"Arial",8,-2147483633,0)
+Gui.Form.txtCustomer.Create(TextBox,"",True,810,300,0,210,465,True,0,"Arial",8,-2147483643,1)
+Gui.Form.lbl2.Create(Label,"Name",True,645,255,0,1125,225,True,0,"Arial",8,-2147483633,0)
+Gui.Form.txtNameCustomer.Create(TextBox,"",True,3600,300,0,1125,465,True,0,"Arial",8,-2147483643,1)
+Gui.Form.cmdBrowseCustomer.Create(Button)
+Gui.Form.cmdBrowseCustomer.Size(720,375)
+Gui.Form.cmdBrowseCustomer.Position(4830,420)
+Gui.Form.cmdBrowseCustomer.Caption("^")
+Gui.Form.cmdBrowseCustomer.Event(Click,cmdBrowseCustomer_Click)
+Gui.Form.lbl3.Create(Label,"Mark Up",True,915,255,0,5760,225,True,0,"Arial",8,-2147483633,0)
+Gui.Form.ddlMarkUp.Create(DropDownList)
+Gui.Form.ddlMarkUp.Size(1095,330)
+Gui.Form.ddlMarkUp.Position(5775,450)
+Gui.Form.cmdOK.Create(Button)
+Gui.Form.cmdOK.Size(855,375)
+Gui.Form.cmdOK.Position(210,900)
+Gui.Form.cmdOK.Caption("OK")
+Gui.Form.cmdOK.Event(Click,cmdOK_Click)
+Gui.Form.proBar.Create(ProgressBar)
+Gui.Form.proBar.Visible(False)
+Gui.Form.proBar.Size(6615,105)
+Gui.Form.proBar.Position(210,1365)
+Gui.Progress..Create
+Gui.Progress..Caption("Router Bom Cost Buildup Progress")
+Gui.Progress..Size(13905,1320)
+Gui.Progress..MinX(0)
+Gui.Progress..MinY(0)
+Gui.Progress..Position(0,0)
+Gui.Progress..BackColor(-2147483633)
+Gui.Progress..MousePointer(0)
+Gui.Progress..Event(UnLoad,Progress_UnLoad)
+Gui.Progress.proBar.Create(ProgressBar)
+Gui.Progress.proBar.Size(13020,165)
+Gui.Progress.proBar.Position(360,315)
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+V.Global.s1500Error.Declare(String)
+V.Global.s1500InputFile.Declare(String)
+V.Global.s1500OutputFile.Declare(String)
+F.Intrinsic.String.Build("{0}\{1}{2}PRICING.IN",V.Caller.FilesDir,V.Caller.User.Trim,V.Caller.Terminal,V.Global.s1500InputFile)
+F.Intrinsic.String.Build("{0}\{1}{2}PRICING.OUT",V.Caller.FilesDir,V.Caller.User.Trim,V.Caller.Terminal,V.Global.s1500OutputFile)
+v.Global.sWebImporter.Declare
+v.Global.sWebImporterErrors.Declare
+v.Global.sWebImporterConverted.Declare
+v.Global.sWebImporterUploaded.Declare
+v.Global.iDate.Declare
+v.Global.iTime.Declare
+
+'BN, July 19 2019 in case customer use Cost markup other than 1
+v.Global.fLaborCostMarkup.Declare(Float,1)
+v.Global.fMaterialCostMarkup.Declare(Float,1)
+v.Global.fOutsideCostMarkup.Declare(Float,1)
+''''''''''''''''''''''''''''''''''''''''''''''
+
+'For Web importer to upload a quote
+V.Global.sORDUPLError.Declare(String)
+
+F.Data.DataTable.Create("ORDUPL",True)
+F.Data.DataTable.AddColumn("ORDUPL","Transaction","String","Q")
+F.Data.DataTable.AddColumn("ORDUPL","CustomerNo","String","       ")
+F.Data.DataTable.AddColumn("ORDUPL","OrderNumber","String","       ")
+F.Data.DataTable.AddColumn("ORDUPL","Freight","String","0000000000")
+F.Data.DataTable.AddColumn("ORDUPL","TaxFreightFlag","String"," ")
+F.Data.DataTable.AddColumn("ORDUPL","FreightPerPiece","String"," ")
+F.Data.DataTable.AddColumn("ORDUPL","OrderDueDate","String","00000000")
+F.Data.DataTable.AddColumn("ORDUPL","OrderDate","String","00000000")
+F.Data.DataTable.AddColumn("ORDUPL","UserField1Head","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPL","UserField2Head","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPL","UserField3Head","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPL","UserField4Head","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPL","UserField5Head","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPL","UserId","String","        ")
+F.Data.DataTable.AddColumn("ORDUPL","CustomerPO","String","               ")
+F.Data.DataTable.AddColumn("ORDUPL","Filler1","String","               ")
+F.Data.DataTable.AddColumn("ORDUPL","FreightCurrFlag","String"," ")
+F.Data.DataTable.AddColumn("ORDUPL","DataType","String","S")
+F.Data.DataTable.AddColumn("ORDUPL","ShipVia","String","                     ")
+F.Data.DataTable.AddColumn("ORDUPL","Carrier","String","      ")
+F.Data.DataTable.AddColumn("ORDUPL","ShipToName","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPL","ShipToAddress1","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPL","ShipToAddress2","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPL","ShipToAddress3","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPL","ShipToCity","String","                         ")
+F.Data.DataTable.AddColumn("ORDUPL","ShipToState","String","  ")
+F.Data.DataTable.AddColumn("ORDUPL","ShipToZip","String","             ")
+F.Data.DataTable.AddColumn("ORDUPL","ShipToCountry","String","   ")
+F.Data.DataTable.AddColumn("ORDUPL","ShipToAttention","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPL","Filler2","String","           ")
+F.Data.DataTable.AddColumn("ORDUPL","OrderType","String"," ")
+F.Data.DataTable.AddColumn("ORDUPL","OrderDiscPercentage","String","00000")
+F.Data.DataTable.AddColumn("ORDUPL","Salesman","String","   ")
+F.Data.DataTable.AddColumn("ORDUPL","Filler3","String","                                                                           ")
+F.Data.DataTable.AddColumn("ORDUPL","OverrideAutoNumbering","String"," ")
+F.Data.DataTable.AddColumn("ORDUPL","ShipToID","String","      ")
+F.Data.DataTable.AddColumn("ORDUPL","MarkShipment","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPL","ContactName","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPL","Filler4","String","                                                                                       ")
+
+'ORDUPLExtra
+F.Data.DataTable.Create("ORDUPLExtra",True)
+F.Data.DataTable.AddColumn("ORDUPLExtra","ShipToInternationalFlag","String"," ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ShipToName","String","                                        ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ShipToAddress1","String","                                        ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ShipToAddress2","String","                                        ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ShipToAddress3","String","                                        ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ShipToAddress4","String","                                        ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ShipToAddress5","String","                                        ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ShipToCity","String","                         ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ShipToState","String","  ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ShipToZip","String","             ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ShipToCountry","String","                         ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ShipToAttention","String","                                        ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","BillToInternationalFlag","String"," ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","BillToName","String","                                        ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","BillToAddress1","String","                                        ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","BillToAddress2","String","                                        ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","BillToAddress3","String","                                        ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","BillToAddress4","String","                                        ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","BillToAddress5","String","                                        ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","BillToCity","String","                         ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","BillToState","String","  ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","BillToZip","String","             ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","BillToCountry","String","                         ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","BillToAttention","String","                                        ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ContactEmail","String","                                                                                                    ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ContactPhone","String","                    ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ExtraTextLine1","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ExtraTextLine2","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ExtraTextLine3","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ExtraTextLine4","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ExtraTextLine5","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ExtraTextLine6","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ExtraTextLine7","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ExtraTextLine8","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ExtraTextLine9","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ExtraTextLine10","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","TextPosition","String"," ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ApplyTextToSalesOrder","String"," ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ApplyTextToPackList","String"," ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ApplyTextToInvoice","String"," ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ApplyTextToQuote","String"," ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ApplyTextToRouter","String"," ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","ApplyTextToWO","String"," ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","OrderSort","String","                    ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","OrderSort2","String","                    ")
+F.Data.DataTable.AddColumn("ORDUPLExtra","Filler","String","                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        ")
+
+'ORDUPLLines
+F.Data.DataTable.Create("ORDUPLLines",True)
+F.Data.DataTable.AddColumn("ORDUPLLines","LineNumber","String","   ")
+F.Data.DataTable.AddColumn("ORDUPLLines","Filler1","String"," ")
+F.Data.DataTable.AddColumn("ORDUPLLines","QtyOrdered","String","0000000000000")
+F.Data.DataTable.AddColumn("ORDUPLLines","Weight","String","0000000000")
+F.Data.DataTable.AddColumn("ORDUPLLines","UM","String","  ")
+F.Data.DataTable.AddColumn("ORDUPLLines","PartNumber","String","                    ")
+F.Data.DataTable.AddColumn("ORDUPLLines","PartRev","String","   ")
+F.Data.DataTable.AddColumn("ORDUPLLines","Filler2","String","                  ")
+F.Data.DataTable.AddColumn("ORDUPLLines","PartLoc","String","  ")
+F.Data.DataTable.AddColumn("ORDUPLLines","QuotedPrice","String","0000000000000000")
+F.Data.DataTable.AddColumn("ORDUPLLines","OverridePrice","String","0000000000000000")
+F.Data.DataTable.AddColumn("ORDUPLLines","Cost","String","0000000000000000")
+F.Data.DataTable.AddColumn("ORDUPLLines","PartDesc","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLLines","PL","String","   ")
+F.Data.DataTable.AddColumn("ORDUPLLines","LineOrderDate","String","        ")
+F.Data.DataTable.AddColumn("ORDUPLLines","LinePromiseDate","String","        ")
+F.Data.DataTable.AddColumn("ORDUPLLines","UserField1","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLLines","UserField2","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLLines","UserField3","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLLines","UserField4","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLLines","UserField5","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLLines","Extension","String","0000000000000000")
+F.Data.DataTable.AddColumn("ORDUPLLines","NoDeliveryBeforeDate","String","        ")
+F.Data.DataTable.AddColumn("ORDUPLLines","MustDeliverByDate","String","        ")
+F.Data.DataTable.AddColumn("ORDUPLLines","DataType","String"," ")
+F.Data.DataTable.AddColumn("ORDUPLLines","TextLine1","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLLines","TextLine2","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLLines","TextLine3","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLLines","TextLine4","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLLines","TextLine5","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLLines","TextLine6","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLLines","TextLine7","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLLines","TextLine8","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLLines","TextLine9","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLLines","TextLine10","String","                              ")
+F.Data.DataTable.AddColumn("ORDUPLLines","TaxStatusFlag","String"," ")
+F.Data.DataTable.AddColumn("ORDUPLLines","LineType","String"," ")
+F.Data.DataTable.AddColumn("ORDUPLLines","NegativeFlag","String"," ")
+F.Data.DataTable.AddColumn("ORDUPLLines","PriceFlag","String"," ")
+F.Data.DataTable.AddColumn("ORDUPLLines","SufficientInvCheck","String"," ")
+F.Data.DataTable.AddColumn("ORDUPLLines","SurveyNo","String","00000000")
+F.Data.DataTable.AddColumn("ORDUPLLines","RouterValFlag","String"," ")
+F.Data.DataTable.AddColumn("ORDUPLLines","Router","String","                    ")
+F.Data.DataTable.AddColumn("ORDUPLLines","RouterSeq","String","000000")
+F.Data.DataTable.AddColumn("ORDUPLLines","StockXRef","String"," ")
+F.Data.DataTable.AddColumn("ORDUPLLines","OriginalOrd","String","       ")
+F.Data.DataTable.AddColumn("ORDUPLLines","OriginalLine","String","   ")
+F.Data.DataTable.AddColumn("ORDUPLLines","Length","String","000000000000")
+F.Data.DataTable.AddColumn("ORDUPLLines","Width","String","000000000000")
+F.Data.DataTable.AddColumn("ORDUPLLines","CurrFlag","String"," ")
+F.Data.DataTable.AddColumn("ORDUPLLines","OrderDiscPercentage","String","00000")
+F.Data.DataTable.AddColumn("ORDUPLLines","Filler3","String","                                                                                      ")  
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+'BN, April 2019
+'Customer: Hy-flex Corporation
+'We have inventory parts that all have routers. Some inventory parts also have a bom.
+'By selecting a Customer and a Price markup, we can rebuild the cost for the Router/Bom for this customer.
+'1/If that Part has a Bom, the Bom cost buildup will be run, otherwise, the Router cost buildup.
+'2/After running the cost buildup, a quote will be generated for that customer, then 2 compare price reports will be generated.
+'3/There is also a custom menu item where user can select and run a the 2 compare price reports again which is done by retrieving data from a history custom table. (GCG_5447_Run_Report.g2u)
+'BixRB - 4 Oct 2023
+'Hy-Flex wants to round the Price amounts up to the nearest penny
+
+f.Intrinsic.Control.Try
+	v.Local.sError.Declare
+	
+	f.ODBC.Connection!conx.OpenCompanyConnection
+	
+	'Check folder and create folder, create parameter for Web Importer function
+	f.Intrinsic.Control.CallSub("Prepare_Folder_and_Params")
+	
+	'Create dropdown list for Markup
+	gui.Form.ddlMarkUp.AddItem("1")
+	gui.Form.ddlMarkUp.AddItem("2")
+	gui.Form.ddlMarkUp.AddItem("3")
+	gui.Form.ddlMarkUp.AddItem("4")
+	gui.Form.ddlMarkUp.ListIndex(0)
+	
+	f.Data.Dictionary.CreateFromSQL("NotShowInReportDict","conx","Select rtrim(Part) as Part,Text_Info2 from Inventory_mst2")
+	f.Data.Dictionary.SetDefaultReturn("NotShowInReportDict","")
+	
+	'Show selection form
+	gui.Form..Show
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}Subroutine: {2}{1}Subroutine called from:{6}{1}Error Occurred: {3}{1}Description: {4}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,v.Ambient.SubroutineCalledFrom,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	f.Intrinsic.Control.CallSub("Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.Main.End
+
+Program.Sub.Prepare_Folder_and_Params.Start
+f.Intrinsic.Control.Try
+	v.Local.sError.Declare
+	v.Local.sCustomDir.Declare
+	v.Local.sProjectFolder.Declare
+	v.Local.sDir.Declare
+	v.Local.bEx.Declare
+	v.Local.sParamContent.Declare
+	v.Local.sParamFile.Declare
+	
+	'Check Custom folder
+	f.Intrinsic.String.Build("{0}\Custom",V.Caller.GlobalDir,v.Local.sCustomDir)
+	f.Intrinsic.File.DirExists(v.Local.sCustomDir,v.Local.bEx)
+	f.Intrinsic.Control.If(v.Local.bEx.Not)
+		f.Intrinsic.File.CreateDir(v.Local.sCustomDir)
+	f.Intrinsic.Control.EndIf
+	
+	'Check Project folder
+	f.Intrinsic.String.Build("{0}\Custom\5447",V.Caller.GlobalDir,v.Local.sProjectFolder)
+	f.Intrinsic.File.DirExists(v.Local.sProjectFolder,v.Local.bEx)
+	f.Intrinsic.Control.If(v.Local.bEx.Not)
+		f.Intrinsic.File.CreateDir(v.Local.sProjectFolder)
+	f.Intrinsic.Control.EndIf
+	
+	'Check Company code folder
+	f.Intrinsic.String.Build("{0}\Custom\5447\{1}",V.Caller.GlobalDir,v.Caller.CompanyCode,v.Local.sDir)
+	f.Intrinsic.File.DirExists(v.Local.sDir,v.Local.bEx)
+	f.Intrinsic.Control.If(v.Local.bEx.Not)
+		f.Intrinsic.File.CreateDir(v.Local.sDir)
+	f.Intrinsic.Control.EndIf	
+	
+	'Generating Param file for Web Importer
+	f.Intrinsic.String.Build("{0}\WebImporter",v.Local.sDir,v.Global.sWebImporter)
+	f.Intrinsic.String.Build("{0}\WebImporter\errors",v.Local.sDir,v.Global.sWebImporterErrors)
+	f.Intrinsic.String.Build("{0}\WebImporter\converted",v.Local.sDir,v.Global.sWebImporterConverted)
+	f.Intrinsic.String.Build("{0}\WebImporter\uploaded",v.Local.sDir,v.Global.sWebImporterUploaded)
+	f.Intrinsic.String.Build("WEB ORDER DIRECTORY   = {1}{0}WEB ERROR DIRECTORY   = {2}{0}WEB CONVERTED DIR     = {3}{0}WEB UPLOADED DIRECTORY= {4}{0}EMAIL FROM ADDRESS    = {0}EMAIL TO ADDRESS      = ",v.Ambient.NewLine,v.Global.sWebImporter,v.Global.sWebImporterErrors,v.Global.sWebImporterConverted,v.Global.sWebImporterUploaded,v.Local.sParamContent)
+	f.Intrinsic.String.build("{0}\GSSPARAM{1}.txt",V.Caller.FilesDir,V.Caller.CompanyCode,V.Local.sParamFile)
+	F.Intrinsic.File.String2File(V.Local.sParamFile,V.Local.sParamContent)
+	
+	'Check Web Importer folder
+	f.Intrinsic.File.DirExists(v.Global.sWebImporter,v.Local.bEx)
+	f.Intrinsic.Control.If(v.Local.bEx.Not)
+		f.Intrinsic.File.CreateDir(v.Global.sWebImporter)
+	f.Intrinsic.Control.EndIf	
+	
+	f.Intrinsic.File.DirExists(v.Global.sWebImporterErrors,v.Local.bEx)
+	f.Intrinsic.Control.If(v.Local.bEx.Not)
+		f.Intrinsic.File.CreateDir(v.Global.sWebImporterErrors)
+	f.Intrinsic.Control.EndIf
+	
+	f.Intrinsic.File.DirExists(v.Global.sWebImporterConverted,v.Local.bEx)
+	f.Intrinsic.Control.If(v.Local.bEx.Not)
+		f.Intrinsic.File.CreateDir(v.Global.sWebImporterConverted)
+	f.Intrinsic.Control.EndIf
+	
+	f.Intrinsic.File.DirExists(v.Global.sWebImporterUploaded,v.Local.bEx)
+	f.Intrinsic.Control.If(v.Local.bEx.Not)
+		f.Intrinsic.File.CreateDir(v.Global.sWebImporterUploaded)
+	f.Intrinsic.Control.EndIf		
+	
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}Subroutine: {2}{1}Subroutine called from:{6}{1}Error Occurred: {3}{1}Description: {4}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,v.Ambient.SubroutineCalledFrom,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	f.Intrinsic.Control.CallSub("Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.Prepare_Folder_and_Params.End
+
+Program.Sub.Form_UnLoad.Start
+f.Intrinsic.Control.CallSub("Unload")
+Program.Sub.Form_UnLoad.End
+
+Program.Sub.UnLoad.Start
+f.Intrinsic.Control.Try
+	v.Local.sError.Declare
+
+	F.Intrinsic.Control.If(V.ODBC.conx.State,=,1)
+		F.ODBC.Connection!conx.close
+	F.Intrinsic.Control.EndIf
+	
+	f.Intrinsic.Control.End
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}Subroutine: {2}{1}Subroutine called from:{6}{1}Error Occurred: {3}{1}Description: {4}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,v.Ambient.SubroutineCalledFrom,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End	
+F.Intrinsic.Control.EndTry
+Program.Sub.UnLoad.End
+
+Program.Sub.cmdBrowseCustomer_Click.Start
+'Browse Customer
+F.Intrinsic.Control.Try
+	V.Local..BulkDeclareString(sError,sRet)
+	
+	F.Intrinsic.UI.SetBrowserHotTypeAhead(True)
+	F.Intrinsic.UI.Browser(205,"",V.Local.sRet)
+	F.Intrinsic.Control.If(V.Local.sRet.IsCancel,=,False)
+		F.Intrinsic.String.Split(V.Local.sRet,"*!*",V.Local.sRet)
+		gui.Form.txtCustomer.Text(v.Local.sRet(0))
+		gui.Form.txtNameCustomer.Text(v.Local.sRet(1))
+	F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}GAB Version: {5}}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	f.Intrinsic.Control.CallSub("Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.cmdBrowseCustomer_Click.End
+
+Program.Sub.cmdOK_Click.Start
+F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	v.Local.sRet.Declare
+	v.Local.sSQL.Declare
+
+	v.Local.sHold.Declare
+	v.Local.fOld_List_Price.Declare
+	v.Local.fOld_Alt_Price.Declare	
+	v.Local.sQuoteNumber.Declare
+	v.Local.sPart.Declare
+	v.Local.sRev.Declare
+	v.Local.sPriceCat.Declare
+	v.Local.sPrice.Declare
+	v.Local.sCost.Declare
+	
+	v.Local.iLine.Declare
+	v.Local.iHold.Declare
+	v.Local.iRet.Declare
+	v.Local.iCnt.Declare
+	
+	v.Local.bGoodQuote.Declare	
+	v.Local.fHold.Declare
+	
+	'BN, July 19 2019 Get Cost Markup in case Cost markup other than 1
+	f.ODBC.Connection!conx.ExecuteAndReturn("Select Top 1 Labor_1, Material_1, Outside_1 from v_Markup_Pct",v.Local.sRet)
+	f.Intrinsic.Control.If(v.Local.sRet.Trim,<>,"")
+		f.Intrinsic.String.Split(v.Local.sRet,"*!*",v.Local.sRet)
+		v.Local.fhold.Set(v.Local.sRet(0).Trim)
+		f.Intrinsic.Control.If(v.Local.fHold,<>,0)
+			v.Global.fLaborCostMarkup.Set(v.Local.fHold)
+		f.Intrinsic.Control.EndIf
+		v.Local.fhold.Set(v.Local.sRet(1).Trim)
+		f.Intrinsic.Control.If(v.Local.fHold,<>,0)
+			v.Global.fMaterialCostMarkup.Set(v.Local.fHold)
+		f.Intrinsic.Control.EndIf
+		v.Local.fhold.Set(v.Local.sRet(2).Trim)
+		f.Intrinsic.Control.If(v.Local.fHold,<>,0)
+			v.Global.fOutsideCostMarkup.Set(v.Local.fHold)
+		f.Intrinsic.Control.EndIf			
+	f.Intrinsic.Control.EndIf
+	
+	v.Global.iDate.Set(v.Ambient.Now.FormatYYYYMMDD)
+	v.Global.iTime.Set(v.Ambient.Now.FormatHHNNSS)
+	'Select all routers linking to that customer
+	
+	f.Intrinsic.String.Build("Select ROUTER,Description_Router FROM  V_ROUTER_HEADER WHERE CUSTOMER = '{0}' order by Router",V.Screen.Form!txtCustomer.Text,v.Local.sSQL)
+	 
+	f.Intrinsic.Control.If(v.DataTable.AllRouters.Exists)
+		f.Data.DataTable.Close("AllRouters")
+	f.Intrinsic.Control.EndIf
+	f.Data.DataTable.CreateFromSQL("AllRouters","conx",v.Local.sSQL,True)
+	
+	'Check if there is any router for this customer
+	f.Intrinsic.Control.If(v.DataTable.AllRouters.RowCount,=,0)
+		f.Intrinsic.String.Build("No Routers for customer {0}",v.Screen.Form!txtCustomer.Text,v.Local.sHold)
+		f.Intrinsic.UI.Msgbox(v.Local.sHold,"Attention")
+		f.Intrinsic.Control.ExitSub
+	f.Intrinsic.Control.EndIf
+	
+	'Delete Custom table of the last run
+	f.Intrinsic.String.Build("Delete from GCG_5447_Cost_Price where TRMNL = '{0}' and UserID = '{1}'",v.Caller.Terminal,v.Caller.User,v.Local.sSQL)
+	f.ODBC.Connection!conx.Execute(v.Local.sSQL)
+	
+	'Turn on indicator
+	gui.Form..Visible(False)
+	gui.Progress..Show
+	gui.Progress.proBar.Visible(True)
+	gui.Progress.proBar.Max(v.DataTable.AllRouters.RowCount)	
+	
+	'Loop through Router lists, if it is a Bom, call Bom cost build up, otherwise, call Router cost build up
+	f.Intrinsic.Control.For(v.Local.iCnt,0,v.DataTable.AllRouters.RowCount--,1)
+		gui.Progress.proBar.Value(v.Local.iCnt)
+		
+		'****Need to check if part is Inventory part here before move on  ******
+		f.Intrinsic.String.Build("Select * from inventory_mstr where part = '{0}'",v.DataTable.AllRouters(v.Local.iCnt).Router!FieldValString,v.Local.sSQL)
+		f.ODBC.Connection!conx.ExecuteAndReturn(v.Local.sSQL,v.Local.sRet)
+		f.Intrinsic.Control.If(v.Local.sRet,<>,"")		
+			'Get Old List Price 
+			f.Intrinsic.String.Build("Select Top 1 Amt_Price from Inventory_Mstr where Part = '{0}'",v.DataTable.AllRouters(v.Local.iCnt).Router!FieldValString,v.Local.sSQL)
+			f.ODBC.Connection!conx.ExecuteAndReturn(v.Local.sSQL,v.Local.sRet)
+			f.Intrinsic.Control.If(v.Local.sRet,<>,"")
+				v.Local.fOld_List_Price.Set(v.Local.sRet)
+			f.Intrinsic.Control.Else
+				v.Local.fOld_List_Price.Set("0")		
+			f.Intrinsic.Control.EndIf
+			
+			'Get old Alt price 1
+			f.Intrinsic.String.Build("Select Top 1 ALT_PRICE_1 from INV_ALT_PRICE where Part = '{0}'",v.DataTable.AllRouters(v.Local.iCnt).Router!FieldValString,v.Local.sSQL)
+			f.ODBC.Connection!conx.ExecuteAndReturn(v.Local.sSQL,v.Local.sRet)
+			f.Intrinsic.Control.If(v.Local.sRet,<>,"")
+				v.Local.fOld_Alt_Price.Set(v.Local.sRet)
+			f.Intrinsic.Control.Else
+				v.Local.fOld_Alt_Price.Set("0")		
+			f.Intrinsic.Control.EndIf
+			
+			'Check if it is a Bom then process accordingly
+			f.Intrinsic.String.Build("Select * from v_Bom_Eng where Part = '{0}' and Is_Parent = 'Y'",v.DataTable.AllRouters(v.Local.iCnt).Router!FieldValString,v.Local.sSQL)
+			f.ODBC.Connection!conx.ExecuteAndReturn(v.Local.sSQL,v.Local.sRet)
+			'BixRB - use Ceiling() to round prices up to nearest penny
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",V.Local.fOld_List_Price.String)
+			V.Local.fOld_List_Price.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",V.Local.fOld_Alt_Price.String)
+			V.Local.fOld_Alt_Price.Set(V.Args.Output)
+			f.Intrinsic.Control.If(v.Local.sRet,<>,"")
+				'This part is a Bom
+				f.Intrinsic.Control.CallSub("Bom_Cost_Buildup","sPart",v.DataTable.AllRouters(v.Local.iCnt).Router!FieldValString,"sDescription",v.DataTable.AllRouters(v.Local.iCnt).Description_Router!FieldValString,"fOld_List_Price",v.Local.fOld_List_Price,"fOld_Alt_Price",v.Local.fOld_Alt_Price)
+			f.Intrinsic.Control.Else		
+				'This part is not a Bom. This Part is  a Router
+				
+				f.Intrinsic.Control.CallSub("Router_Cost_Buildup","sPart",v.DataTable.AllRouters(v.Local.iCnt).Router!FieldValString,"sDescription",v.DataTable.AllRouters(v.Local.iCnt).Description_Router!FieldValString,"fOld_List_Price",v.Local.fOld_List_Price,"fOld_Alt_Price",v.Local.fOld_Alt_Price)
+			f.Intrinsic.Control.EndIf
+		f.Intrinsic.Control.EndIf
+	f.Intrinsic.Control.Next(v.Local.iCnt)
+	
+	'Turn off indicator
+	gui.Progress.proBar.Visible(False)
+	gui.Progress..Visible(False)
+
+	f.Intrinsic.UI.InvokeWaitDialog("Generating Quote and Reports...")
+	'Pull data from custom table and add records to ORDUPL tables
+	f.Intrinsic.String.Build("Select * from GCG_5447_Cost_Price where TRMNL = '{0}' and UserID = '{1}' Order by Part",v.Caller.Terminal,v.Caller.User,v.Local.sSQL)
+	f.Intrinsic.Control.If(v.DataTable.Quote.Exists)
+		f.Data.DataTable.Close("Quote")
+	f.Intrinsic.Control.EndIf
+	f.Data.DataTable.CreateFromSQL("Quote","conx",v.Local.sSQL,True)
+
+	f.Intrinsic.String.Build("Price_{0}",v.Screen.Form!ddlMarkUp.Text,v.Local.sPriceCat)
+	f.Intrinsic.Control.If(v.DataTable.Quote.RowCount,>,0)		
+		
+		'Generate Quote
+		'Get Quote number (ReadOption 401312 does not work so we select the max Quote_No and increment to get the next available Quote Number)
+		f.ODBC.Connection!conx.ExecuteAndReturn("SELECT Top 1 Quote_No FROM V_QUOTE_HEADER order by Quote_No desc",v.Local.sRet)		
+		v.Local.iHold.Set(v.Local.sRet)
+		f.Intrinsic.Math.Add(v.Local.iHold,1,v.Local.iHold)
+		f.Intrinsic.String.LPad(v.Local.iHold,"0",7,v.Local.sQuoteNumber)
+		
+		f.Intrinsic.String.Build("Validating quote {0}",v.Local.sQuoteNumber,v.Local.sHold)
+		f.Intrinsic.UI.ChangeWaitStatus(v.Local.sHold)
+		
+		f.Intrinsic.String.Build("Update GCG_5447_Cost_Price set QuoteNumber = '{2}' where GenDate = '{0}' and GenTime = '{1}'",v.Global.iDate,v.Global.iTime,v.Local.sQuoteNumber,v.Local.sSQL)
+		f.ODBC.Connection!conx.Execute(v.Local.sSQL)
+		f.Intrinsic.String.Build("Update GCG_5447_CostPrice_H set QuoteNumber = '{2}' where GenDate = '{0}' and GenTime = '{1}'",v.Global.iDate,v.Global.iTime,v.Local.sQuoteNumber,v.Local.sSQL)
+		f.ODBC.Connection!conx.Execute(v.Local.sSQL)
+		
+		'Add Quote header record, prepare for uploading the quote
+		f.Data.DataTable.AddRow("ORDUPL","Transaction","Q","CustomerNo",v.Screen.Form!txtCustomer.Text,"OrderNumber",v.Local.sQuoteNumber,"CustomerPO",v.Ambient.Now.FormatYYYYMMDDHHNNSS,"OrderDate",v.Ambient.Date.FormatYYYYMMDD,"OrderDueDate",v.Ambient.Date.FormatYYYYMMDD)
+		'Add Quote Line records, prepare for uploading the quote
+		f.Intrinsic.Control.For(v.Local.iCnt,0,v.DataTable.Quote.RowCount--,1)
+			f.Intrinsic.Math.Add(v.Local.iCnt,1,v.Local.iLine)
+			v.Local.sPart.Set(v.DataTable.Quote(v.Local.iCnt).Part!FieldValString)
+			F.Intrinsic.Control.SelectCase(v.Screen.Form!ddlMarkUp.Text)
+				F.Intrinsic.Control.Case("1")
+					v.Local.sPrice.Set(v.DataTable.Quote(v.Local.iCnt).Price_1!FieldValString)
+				F.Intrinsic.Control.Case("2")
+					v.Local.sPrice.Set(v.DataTable.Quote(v.Local.iCnt).Price_2!FieldValString)
+				F.Intrinsic.Control.Case("3")
+					v.Local.sPrice.Set(v.DataTable.Quote(v.Local.iCnt).Price_3!FieldValString)
+				F.Intrinsic.Control.Case("4")
+					v.Local.sPrice.Set(v.DataTable.Quote(v.Local.iCnt).Price_4!FieldValString)
+			F.Intrinsic.Control.EndSelect			
+			
+			'BixRB - Round price & cost up to the nearest penny
+			V.Local.sCost.Set(v.DataTable.Quote(v.Local.iCnt).Cost!FieldValString)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",V.Local.sPrice)
+			V.Local.sPrice.Set(V.Args.Output.String)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",V.Local.sCost)
+			V.Local.sCost.Set(V.Args.Output.String)
+			f.Data.DataTable.AddRow("ORDUPLLines","LineNumber",v.Local.iLine,"QtyOrdered","0000000010000","PartNumber",v.Local.sPart.Left17,"PartRev",v.Local.sPart.Right3,"QuotedPrice",v.Local.sPrice,"PartDesc",v.DataTable.Quote(v.Local.iCnt).Description!FieldValString,"PL","FG","LineOrderDate",v.Ambient.Date.FormatYYYYMMDD,"LinePromiseDate",v.Ambient.Date.FormatYYYYMMDD,"Cost",V.Local.sCost)
+		f.Intrinsic.Control.Next(v.Local.iCnt)
+		'Generating the text file for Web Importer to upload the quote
+		f.Intrinsic.Control.CallSub("ORDUPLCreateFile")
+		
+		F.Global.General.CallWrapperSync(50,"ORDUPL")			
+
+		'Call Crystal Report	
+		f.Intrinsic.UI.ChangeWaitStatus("Generating reports... ")
+		f.Intrinsic.Control.CallSub("Print_Report","sQuoteNumber",v.Local.sQuoteNumber)
+		
+		'Open the Quote Form
+		F.Intrinsic.String.Concat(V.Local.sQuoteNumber,"!*!O",v.Local.sHold)
+		f.Global.General.CallWrapperAsync(251000,v.local.sHold)	
+		
+		f.Intrinsic.Control.CallSub("Unload")
+	f.Intrinsic.Control.Else
+		f.Intrinsic.UI.Msgbox("No Routers/Boms to process")
+	f.Intrinsic.Control.EndIf			
+	
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}GAB Version: {5}}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	f.Intrinsic.Control.CallSub("Unload")
+F.Intrinsic.Control.EndTry	
+Program.Sub.cmdOK_Click.End
+
+Program.Sub.Print_Report.Start
+f.Intrinsic.Control.Try
+	v.Local..BulkDeclareLong(iBIRunID,iRptID,iBILogID)
+	v.Local..BulkDeclareString(sError,sVal)
+		
+		f.Intrinsic.UI.InvokeWaitDialog("Preparing report - Old Price/New Price Percentage Change...")
+		'Log Report
+		F.Global.BI.GetRunID(v.Local.iBIRunID)
+		f.Global.BI.GetIDFromName("GCG_5447_ComparePrice.rpt",True,v.Local.iRptID)
+		F.Global.BI.StartLogging(v.Local.iBIRunID,v.Local.iRptID,-1,"",v.Local.iBILogID)	
+		'Stop Logging
+		F.Global.BI.StopLogging(v.Local.iBILogID)
+		f.Intrinsic.String.Build("{0}*!*{1}*!*{2}*!*{3}*!*{4}*!*{5}*!*{6}*!*{7}",v.Caller.User,v.Caller.Terminal,v.Screen.Form!txtCustomer.Text,v.Screen.Form!txtNameCustomer.Text,v.Global.iDate,v.Global.iTime,v.Screen.Form!ddlMarkUp.Text,v.Args.sQuoteNumber,v.Local.sVal)
+		
+		f.Intrinsic.UI.CloseWaitDialog
+		F.Global.BI.RunReportPreProcessor(v.Local.iBIRunID,v.Local.iBILogID,"UserID*!*TRMNL*!*Customer*!*NameCustomer*!*GenDate*!*GenTime*!*PriceSelected*!*QuoteNumber",V.Local.sVal,"",-1,False,"",-1,"",-1,"","",v.Local.iBIRunID)
+		
+		f.Intrinsic.UI.InvokeWaitDialog("Preparing report - Old Price/New Material + Markup...")
+		'Run Report for Material Markup
+		'Log report
+		F.Global.BI.GetRunID(v.Local.iBIRunID)
+		f.Global.BI.GetIDFromName("GCG_5447_ComparePriceMat.rpt",True,v.Local.iRptID)
+		F.Global.BI.StartLogging(v.Local.iBIRunID,v.Local.iRptID,-1,"",v.Local.iBILogID)	
+		'Stop Logging
+		F.Global.BI.StopLogging(v.Local.iBILogID)
+		F.Global.BI.RunReportPreProcessor(v.Local.iBIRunID,v.Local.iBILogID,"UserID*!*TRMNL*!*Customer*!*NameCustomer*!*GenDate*!*GenTime*!*PriceSelected*!*QuoteNumber",V.Local.sVal,"",-1,False,"",-1,"",-1,"","",v.Local.iBIRunID)
+		f.Intrinsic.UI.CloseWaitDialog
+		
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	f.Intrinsic.Control.CallSub("Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.Print_Report.End
+
+Program.Sub.Bom_Cost_Buildup.Start
+f.Intrinsic.Control.Try
+	v.Local.sError.Declare
+	v.Local.sRet.Declare
+	v.Local.sSQL.Declare
+	v.Local.sHold.Declare
+	v.Local.fHold.Declare
+	V.Local.sStatus.Declare
+	
+	'Variables to set and save
+	v.Local.sPart.Declare
+	v.Local.fCost.Declare
+	v.Local.fMaterial.Declare
+	v.Local.fLabor.Declare
+	v.Local.fOutside.Declare
+	v.Local.fOverhead.Declare
+	v.Local.fFreight.Declare
+	v.Local.fOther.Declare
+	v.Local.fEst_Material_1.Declare
+	v.Local.fEst_Material_2.Declare
+	v.Local.fEst_Material_3.Declare
+	v.Local.fEst_Material_4.Declare
+	v.Local.fEst_Material_5.Declare
+	v.Local.fEst_Material_6.Declare
+	v.Local.fEst_Labor_1.Declare
+	v.Local.fEst_Labor_2.Declare
+	v.Local.fEst_Labor_3.Declare
+	v.Local.fEst_Labor_4.Declare
+	v.Local.fEst_Labor_5.Declare
+	v.Local.fEst_Labor_6.Declare
+	v.Local.fEst_Outside_1.Declare
+	v.Local.fEst_Outside_2.Declare
+	v.Local.fEst_Outside_3.Declare
+	v.Local.fEst_Outside_4.Declare
+	v.Local.fEst_Outside_5.Declare
+	v.Local.fEst_Outside_6.Declare
+	v.Local.fPrice1.Declare
+	v.Local.fPrice2.Declare
+	v.Local.fPrice3.Declare
+	v.Local.fPrice4.Declare	
+	v.Local.fOld_List_Price.Declare
+	v.Local.fOld_Alt_Price.Declare
+	v.Local.fNew_List_Price.Declare
+	v.Local.fNew_Alt_Price.Declare
+	V.Local.iHold.Declare
+	v.Local.sSeq.Declare
+	v.Local.bGoodTogo.Declare	
+	V.Local.sName.Declare
+	v.Local.sShow.Declare
+	v.Local.sDescription.Declare
+
+	'Delete BI_Bom_Buildup_E by  TRMNL = terminal, RPTID = '004203'
+	f.Intrinsic.String.Build("Delete from BI_Bom_Buildup_E where TRMNL = '{0}' and RPTID = '004203'",v.Caller.Terminal,v.Local.sSQL)
+	f.ODBC.Connection!conx.Execute(v.Local.sSQL)
+
+	'Create and setup properties for CallWrapper then run callwrapper
+	F.Global.Callwrapper.New("BomCost","Manufacturing.BOM.CostBuildup")
+	F.Global.Callwrapper.SetProperty("BomCost","Program","RE0100")
+	F.Global.Callwrapper.SetProperty("BomCost","Parent",v.Args.sPart)
+	F.Global.Callwrapper.SetProperty("BomCost","Flags","1")
+	F.Global.CallWrapper.Run("BomCost")
+	
+	F.Global.CallWrapper.GetProperty("BomCost","Status",V.Local.sStatus)
+	f.Intrinsic.Control.If(v.Local.sStatus,=,"Success")
+		'Total Cost (for testing purpose)
+		F.Global.CallWrapper.GetProperty("BomCost","TotalCost",V.Local.fHold)
+				
+		'Pull data from v_BI_Bom_Buildup_E where TRMNL = terminal, RPTID = '004203' 
+		f.Intrinsic.String.build("Select * from v_BI_Bom_Buildup_E where TRMNL = '{0}' and RPTID = '004203' Order by Sequence",v.Caller.Terminal,v.Local.sSQL)		
+		'As the callwrapper is running asynchronously, we will have to wait for the BI data to be populated
+		f.Intrinsic.UI.InvokeWaitDialog("Waiting BI data to be populated...")
+		v.Local.bGoodTogo.Set(False)
+		f.Intrinsic.Control.DoUntil(v.Local.bGoodTogo,=,True)
+			f.ODBC.Connection!conx.ExecuteAndReturn(v.Local.sSQL,v.Local.sRet)
+			f.Intrinsic.Control.If(v.Local.sRet,<>,"")
+				v.Local.bGoodTogo.Set(True)				
+			f.Intrinsic.Control.EndIf
+		f.Intrinsic.Control.Loop		
+		f.Intrinsic.UI.ChangeWaitStatus("BI Data is populated.")
+		'Just sleep a second to make sure that the BI table have all data
+		F.Intrinsic.UI.Sleep(1)
+		
+		'Get data from BI table
+		f.Data.DataTable.CreateFromSQL("CostData","conx",v.Local.sSQL,True)
+		f.Data.DataView.Create("CostData","CostDataDV")
+				
+		'Set filter Description = '*** PARENT TOTAL ***' , Rec_Type = 'R'
+		'Parent_Key is Part number, Total Cost is from column Added_Cost column, then Material,Labor,Overhead,Outside,Freight,Other is from the same column names.
+		f.Data.DataView.SetFilter("CostData","CostDataDV","Rec_Type = 'R' and Description = '*** PARENT TOTAL ***'")
+		f.Intrinsic.Control.If(v.DataView.CostData!CostDataDV.RowCount,>,0)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Added_Cost!FieldValString)
+			V.Local.fCost.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Material!FieldValString)
+			V.Local.fMaterial.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Labor!FieldValString)
+			V.Local.fLabor.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Outside!FieldValString)
+			V.Local.fOutside.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Overhead!FieldValString)
+			V.Local.fOverhead.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Other!FieldValString)
+			V.Local.fOther.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Freight!FieldValString)
+			V.Local.fFreight.Set(V.Args.Output)
+		f.Intrinsic.Control.Else
+			v.Local.fCost.Set("0")
+			v.Local.fMaterial.Set("0")
+			v.Local.fLabor.Set("0")
+			v.Local.fOutside.Set("0")
+			v.Local.fOverhead.Set("0")
+			v.Local.fOther.Set("0")
+			v.Local.fFreight.Set("0")	
+		f.Intrinsic.Control.EndIf		
+		
+		'Pull data from v_BI_Bom_Buildup_E , where  Rec_Type = 'T' 
+		'EST_Labor_1 to 6, EST_Material_1 to 6, EST_Outside_1 to 6
+		f.Data.DataView.SetFilter("CostData","CostDataDV","Rec_Type = 'T'")
+		f.Intrinsic.Control.If(v.DataView.CostData!CostDataDV.RowCount,>,0)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Est_Labor_1!FieldValString)
+			V.Local.fEst_Labor_1.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Est_Labor_2!FieldValString)
+			V.Local.fEst_Labor_2.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Est_Labor_3!FieldValString)
+			V.Local.fEst_Labor_3.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Est_Labor_4!FieldValString)
+			V.Local.fEst_Labor_4.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Est_Labor_5!FieldValString)
+			V.Local.fEst_Labor_5.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Est_Labor_6!FieldValString)
+			V.Local.fEst_Labor_6.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Est_Material_1!FieldValString)
+			V.Local.fEst_Material_1.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Est_Material_2!FieldValString)
+			V.Local.fEst_Material_2.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Est_Material_3!FieldValString)
+			V.Local.fEst_Material_3.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Est_Material_4!FieldValString)
+			V.Local.fEst_Material_4.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Est_Material_5!FieldValString)
+			V.Local.fEst_Material_5.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Est_Material_6!FieldValString)
+			V.Local.fEst_Material_6.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Est_Outside_1!FieldValString)
+			V.Local.fEst_Outside_1.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Est_Outside_2!FieldValString)
+			V.Local.fEst_Outside_2.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Est_Outside_3!FieldValString)
+			V.Local.fEst_Outside_3.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Est_Outside_4!FieldValString)
+			V.Local.fEst_Outside_4.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Est_Outside_5!FieldValString)
+			V.Local.fEst_Outside_5.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Est_Outside_6!FieldValString)
+			V.Local.fEst_Outside_6.Set(V.Args.Output)
+			v.Local.iHold.Set(v.DataView.CostData!CostDataDV(0).Sequence!FieldValString)
+		f.Intrinsic.Control.Else
+			v.Local.fEst_Labor_1.Set("0")	
+			v.Local.fEst_Labor_2.Set("0")
+			v.Local.fEst_Labor_3.Set("0")
+			v.Local.fEst_Labor_4.Set("0")
+			v.Local.fEst_Labor_5.Set("0")
+			v.Local.fEst_Labor_6.Set("0")
+			v.Local.fEst_Material_1.Set("0")
+			v.Local.fEst_Material_2.Set("0")
+			v.Local.fEst_Material_3.Set("0")
+			v.Local.fEst_Material_4.Set("0")
+			v.Local.fEst_Material_5.Set("0")
+			v.Local.fEst_Material_6.Set("0")
+			v.Local.fEst_Outside_1.Set("0")
+			v.Local.fEst_Outside_2.Set("0")
+			v.Local.fEst_Outside_3.Set("0")
+			v.Local.fEst_Outside_4.Set("0")
+			v.Local.fEst_Outside_5.Set("0")
+			v.Local.fEst_Outside_6.Set("0")
+			v.Local.iHold.Set("0")
+		f.Intrinsic.Control.EndIf	
+		
+		f.Intrinsic.Math.Add(v.Local.iHold,1,v.Local.iHold)
+		f.Intrinsic.String.LPad(v.Local.iHold,"0",6,v.Local.sSeq)
+		f.Intrinsic.String.Build("Sequence = '{0}'",v.Local.sSeq,v.Local.sHold)
+		'Pull Price from 1 to 4
+		f.Data.DataView.SetFilter("CostData","CostDataDV",v.Local.sHold)
+		f.Intrinsic.Control.If(v.DataView.CostData!CostDataDV.RowCount,>,0)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Parent_qty_3!FieldValString)
+			V.Local.fPrice1.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Parent_qty_4!FieldValString)
+			V.Local.fPrice2.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Parent_qty_5!FieldValString)
+			V.Local.fPrice3.Set(V.Args.Output)
+			F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.CostData!CostDataDV(0).Parent_qty_6!FieldValString)
+			V.Local.fPrice4.Set(V.Args.Output)
+			F.Intrinsic.Control.SelectCase(v.Screen.Form!ddlMarkUp.Text)
+				F.Intrinsic.Control.Case("1")
+					v.Local.fNew_List_Price.Set(v.Local.fPrice1)
+				F.Intrinsic.Control.Case("2")
+					v.Local.fNew_List_Price.Set(v.Local.fPrice2)
+				F.Intrinsic.Control.Case("3")
+					v.Local.fNew_List_Price.Set(v.Local.fPrice3)
+				F.Intrinsic.Control.Case("4")
+					v.Local.fNew_List_Price.Set(v.Local.fPrice4)
+			F.Intrinsic.Control.EndSelect
+		f.Intrinsic.Control.Else
+			v.Local.fPrice1.Set("0")
+			v.Local.fPrice2.Set("0")
+			v.Local.fPrice3.Set("0")
+			v.Local.fPrice4.Set("0")
+			v.Local.fNew_List_Price.Set("0"])
+			f.Intrinsic.Control.EndIf
+
+		v.Local.fNew_Alt_Price.Set(v.Args.fOld_List_Price)
+		v.Local.sHold.Set(v.Args.sPart.Trim)
+		v.Local.sShow.Set(v.Dictionary.NotShowInReportDict![v.Local.sHold])
+		'Will only display the parent part. The flag to decide to display in report will be from Inventory_Mst.Text_Info2
+		f.Intrinsic.Control.If(v.Local.sShow.Trim,<>,"N")			
+			'Save the record to GCG_5447_Cost_Price
+			v.Local.sName.Set(v.Screen.Form!txtNameCustomer.Text)
+			v.Local.sDescription.Set(v.Args.sDescription)
+			f.Intrinsic.String.build("Insert into GCG_5447_Cost_Price (TRMNL,UserID,Part,Description,Customer,Name,Old_List_Price,Old_Alt_Price,New_List_Price,New_Alt_Price,Cost,Material,Labor,Outside,Overhead,Freight,Other,Est_Labor1,Est_Labor_2,Est_Labor_3,Est_Labor_4,Est_Labor_5,Est_Labor_6,Est_Material_1,Est_Material_2,Est_Material_3,Est_Material_4,Est_Material_5,Est_Material_6,Est_Outside_1,Est_Outside_2,Est_Outside_3,Est_Outside_4,Est_Outside_5,Est_Outside_6,Price_1,Price_2,Price_3,Price_4,IsBom,GenDate,GenTime,PriceSelected) values ('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','{9}','{10}','{11}','{12}','{13}','{14}','{15}','{16}','{17}','{18}','{19}','{20}','{21}','{22}','{23}','{24}','{25}','{26}','{27}','{28}','{29}','{30}','{31}','{32}','{33}','{34}','{35}','{36}','{37}','{38}','{39}','{40}','{41}','{42}')",v.Caller.Terminal,v.Caller.User,v.Args.sPart,v.Local.sDescription.PSQLFriendly,v.Screen.Form!txtCustomer.Text,v.Local.sName.PSQLFriendly,v.Args.fOld_List_Price,v.Args.fOld_Alt_Price,v.Local.fNew_List_Price,v.Local.fNew_Alt_Price,v.Local.fCost,v.Local.fMaterial,v.Local.fLabor,v.Local.fOutside,v.Local.fOverhead,v.Local.fFreight,v.Local.fOther,v.Local.fEst_Labor_1,v.Local.fEst_Labor_2,v.Local.fEst_Labor_3,v.Local.fEst_Labor_4,v.Local.fEst_Labor_5,v.Local.fEst_Labor_6,v.Local.fEst_Material_1,v.Local.fEst_Material_2,v.Local.fEst_Material_3,v.Local.fEst_Material_4,v.Local.fEst_Material_5,v.Local.fEst_Material_6,v.Local.fEst_Outside_1,v.Local.fEst_Outside_2,v.Local.fEst_Outside_3,v.Local.fEst_Outside_4,v.Local.fEst_Outside_5,v.Local.fEst_Outside_6,v.Local.fPrice1,v.Local.fPrice2,v.Local.fPrice3,v.Local.fPrice4,"Y",v.Global.iDate,V.Global.iTime,v.Screen.Form!ddlMarkUp.Text,v.Local.sSQL)
+			f.ODBC.Connection!conx.Execute(v.Local.sSQL)
+			
+			'Insert to History table
+			f.Intrinsic.String.build("Insert into GCG_5447_CostPrice_H (TRMNL,UserID,Part,Description,Customer,Name,Old_List_Price,Old_Alt_Price,New_List_Price,New_Alt_Price,Cost,Material,Labor,Outside,Overhead,Freight,Other,Est_Labor1,Est_Labor_2,Est_Labor_3,Est_Labor_4,Est_Labor_5,Est_Labor_6,Est_Material_1,Est_Material_2,Est_Material_3,Est_Material_4,Est_Material_5,Est_Material_6,Est_Outside_1,Est_Outside_2,Est_Outside_3,Est_Outside_4,Est_Outside_5,Est_Outside_6,Price_1,Price_2,Price_3,Price_4,IsBom,GenDate,GenTime,PriceSelected) values ('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','{9}','{10}','{11}','{12}','{13}','{14}','{15}','{16}','{17}','{18}','{19}','{20}','{21}','{22}','{23}','{24}','{25}','{26}','{27}','{28}','{29}','{30}','{31}','{32}','{33}','{34}','{35}','{36}','{37}','{38}','{39}','{40}','{41}','{42}')",v.Caller.Terminal,v.Caller.User,v.Args.sPart,v.Local.sDescription.PSQLFriendly,v.Screen.Form!txtCustomer.Text,v.Local.sName.PSQLFriendly,v.Args.fOld_List_Price,v.Args.fOld_Alt_Price,v.Local.fNew_List_Price,v.Local.fNew_Alt_Price,v.Local.fCost,v.Local.fMaterial,v.Local.fLabor,v.Local.fOutside,v.Local.fOverhead,v.Local.fFreight,v.Local.fOther,v.Local.fEst_Labor_1,v.Local.fEst_Labor_2,v.Local.fEst_Labor_3,v.Local.fEst_Labor_4,v.Local.fEst_Labor_5,v.Local.fEst_Labor_6,v.Local.fEst_Material_1,v.Local.fEst_Material_2,v.Local.fEst_Material_3,v.Local.fEst_Material_4,v.Local.fEst_Material_5,v.Local.fEst_Material_6,v.Local.fEst_Outside_1,v.Local.fEst_Outside_2,v.Local.fEst_Outside_3,v.Local.fEst_Outside_4,v.Local.fEst_Outside_5,v.Local.fEst_Outside_6,v.Local.fPrice1,v.Local.fPrice2,v.Local.fPrice3,v.Local.fPrice4,"Y",v.Global.iDate,V.Global.iTime,v.Screen.Form!ddlMarkUp.Text,v.Local.sSQL)
+			f.ODBC.Connection!conx.Execute(v.Local.sSQL)
+		f.Intrinsic.Control.EndIf		
+		f.Data.DataTable.Close("CostData")
+		
+		'Update new List Price and new Alt Price
+		f.Intrinsic.String.build("Update Inventory_Mstr set Amt_Price = '{0}' where Part = '{1}'",v.Local.fNew_List_Price,v.Args.sPart,v.Local.sSQL)
+		f.ODBC.Connection!conx.Execute(v.Local.sSQL)
+		f.Intrinsic.String.build("Update INV_ALT_PRICE set ALT_PRICE_1   = '{0}' where Part = '{1}'",v.Local.fNew_Alt_Price,v.Args.sPart,v.Local.sSQL)
+		f.ODBC.Connection!conx.Execute(v.Local.sSQL)
+		
+	f.Intrinsic.Control.EndIf		
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}GAB Version: {5}}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	f.Intrinsic.Control.CallSub("Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.Bom_Cost_Buildup.End
+
+Program.Sub.Router_Cost_Buildup.Start
+f.Intrinsic.Control.Try
+	v.Local.sError.Declare
+	v.Local.sParams.Declare
+	V.Local.sFileContent.Declare
+	v.Local.sOutput.Declare
+	v.Local.iCnt.Declare
+	
+	v.Local.sRet.Declare
+	v.Local.sSQL.Declare
+	v.Local.sHold.Declare
+	v.Local.fHold.Declare
+	V.Local.sStatus.Declare
+	
+	'Variables to set and save
+	v.Local.sPart.Declare
+	v.Local.fCost.Declare
+	v.Local.fMaterial.Declare
+	v.Local.fLabor.Declare
+	v.Local.fOutside.Declare
+	v.Local.fOverhead.Declare
+	v.Local.fFreight.Declare
+	v.Local.fOther.Declare
+	
+	v.Local.fMaterial1.Declare
+	v.Local.fLabor1.Declare
+	v.Local.fOutside1.Declare
+	v.Local.fOverhead1.Declare
+	
+	v.Local.fMaterial2.Declare
+	v.Local.fLabor2.Declare
+	v.Local.fOutside2.Declare
+	v.Local.fOverhead2.Declare
+	
+	v.Local.fMaterial3.Declare
+	v.Local.fLabor3.Declare
+	v.Local.fOutside3.Declare
+	v.Local.fOverhead3.Declare
+	
+	v.Local.fMaterial4.Declare
+	v.Local.fLabor4.Declare
+	v.Local.fOutside4.Declare
+	v.Local.fOverhead4.Declare
+	
+	v.Local.fEst_Material_1.Declare
+	v.Local.fEst_Material_2.Declare
+	v.Local.fEst_Material_3.Declare
+	v.Local.fEst_Material_4.Declare
+	v.Local.fEst_Material_5.Declare
+	v.Local.fEst_Material_6.Declare
+	v.Local.fEst_Labor_1.Declare
+	v.Local.fEst_Labor_2.Declare
+	v.Local.fEst_Labor_3.Declare
+	v.Local.fEst_Labor_4.Declare
+	v.Local.fEst_Labor_5.Declare
+	v.Local.fEst_Labor_6.Declare
+	v.Local.fEst_Outside_1.Declare
+	v.Local.fEst_Outside_2.Declare
+	v.Local.fEst_Outside_3.Declare
+	v.Local.fEst_Outside_4.Declare
+	v.Local.fEst_Outside_5.Declare
+	v.Local.fEst_Outside_6.Declare
+	v.Local.fPrice1.Declare
+	v.Local.fPrice2.Declare
+	v.Local.fPrice3.Declare
+	v.Local.fPrice4.Declare	
+	v.Local.fOld_List_Price.Declare
+	v.Local.fOld_Alt_Price.Declare
+	v.Local.fNew_List_Price.Declare
+	v.Local.fNew_Alt_Price.Declare
+	v.Local.sName.Declare
+	v.Local.sShow.Declare
+	v.Local.sDescription.Declare
+	
+
+	f.Intrinsic.Control.If(v.DataTable.1500.Exists)
+		f.Data.DataTable.Close("1500")
+	f.Intrinsic.Control.EndIf
+	F.Data.DataTable.Create("1500",True)
+	F.Data.DataTable.AddColumn("1500","Router","String")
+	F.Data.DataTable.AddColumn("1500","Quantity","Float")
+	f.Data.DataTable.AddRow("1500","Router",v.Args.sPart,"Quantity","1")
+	'Create input file for callwrapper
+	F.Data.DataView.Create("1500","1500View",22)
+	F.Data.DataView.ToString("1500","1500View","*!*",V.Ambient.NewLine,V.Local.sFileContent)
+	F.Intrinsic.File.String2File(V.Global.s1500InputFile,V.Local.sFileContent)
+	'Call CallWrapper
+	F.Intrinsic.String.ConcatCallWrapperArgs(V.Global.s1500InputFile,V.Global.s1500OutputFile,V.Local.sParams)
+	F.Global.General.CallWrapperSync(1500,V.Local.sParams)
+	F.Intrinsic.File.File2String(V.Global.s1500OutputFile,V.Local.sOutput)
+	
+	'Get result	
+	f.Data.DataTable.CreateFromString("ROUTER",V.Local.sOutput,"Line_Type*!*ROUTER*!*QTY*!*Seq*!*Seq_Type*!*Part_WC*!*NA1*!*NA2*!*Op_Code*!*Setup*!*Runtime*!*Rate*!*Freq*!*Description*!*UM*!*NA3*!*NA4*!*NA5*!*NA6*!*NA7","STRING*!*STRING*!*STRING*!*STRING*!*STRING*!*STRING*!*STRING*!*STRING*!*STRING*!*STRING*!*STRING*!*STRING*!*STRING*!*STRING*!*STRING*!*STRING*!*STRING*!*STRING*!*STRING*!*STRING","*!*",V.Ambient.NewLine,True)
+	'***Mapping***
+	'Line_Type: Type
+	'Router: Router
+	'Qty: Qty
+	'Seq: Dir_Cost
+	'RunTime: Cost
+	'Cost: Seq_Type
+	'Part_WC: Material
+	'NA1: Outside
+	'NA2: Labor
+	'Op_code: Labor_Hours
+	'Setup: Overhead
+					
+	'Pull data from table Router and save to custom table
+	f.Data.DataView.Create("Router","RouterDV")
+	
+	'Set filter Description = '*** PARENT TOTAL ***' , Rec_Type = 'R'
+	'Parent_Key is Part number, Total Cost is from column Added_Cost column, then Material,Labor,Overhead,Outside,Freight,Other is from the same column names.
+	f.Data.DataView.SetFilter("Router","RouterDV","Line_Type = 'T'")
+	f.Intrinsic.Control.If(v.DataView.Router!RouterDV.RowCount,>,0)
+		F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.Router!RouterDV(0).RunTime!FieldValString)
+		V.Local.fCost.Set(V.Args.Output)
+		F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.Router!RouterDV(0).Part_WC!FieldValString)
+		V.Local.fMaterial.Set(V.Args.Output)
+		F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.Router!RouterDV(0).NA2!FieldValString)
+		V.Local.fLabor.Set(V.Args.Output)
+		F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.Router!RouterDV(0).NA1!FieldValString)
+		V.Local.fOutside.Set(V.Args.Output)
+		F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.Router!RouterDV(0).Setup!FieldValString)
+		V.Local.fOverhead.Set(V.Args.Output)
+		v.Local.fOther.Set("0")
+		v.Local.fFreight.Set("0")	
+	f.Intrinsic.Control.Else
+		v.Local.fCost.Set("0")
+		v.Local.fMaterial.Set("0")
+		v.Local.fLabor.Set("0")
+		v.Local.fOutside.Set("0")
+		v.Local.fOverhead.Set("0")
+		v.Local.fOther.Set("0")
+		v.Local.fFreight.Set("0")	
+	f.Intrinsic.Control.EndIf
+	
+	'BN, July 19 in case Customer use Cost markup other than 1
+	f.Intrinsic.Math.Div(v.Local.fMaterial,v.Global.fMaterialCostMarkup,v.Local.fMaterial)
+	F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",V.Local.fMaterial.String)
+	V.Local.fMaterial.Set(V.Args.Output)
+	f.Intrinsic.Math.Div(v.Local.fOutside,v.Global.fOutsideCostMarkup,v.Local.fOutside)
+	F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",V.Local.fOutside.String)
+	V.Local.fOutside.Set(V.Args.Output)
+	f.Intrinsic.Math.Div(v.Local.fLabor,v.Global.fLaborCostMarkup,v.Local.fLabor)
+	F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",V.Local.fLabor.String)
+	V.Local.fLabor.Set(V.Args.Output)
+	f.Intrinsic.Math.Div(v.Local.fOverhead,v.Global.fLaborCostMarkup,v.Local.fOverhead)
+	F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",V.Local.fOverhead.String)
+	V.Local.fOverhead.Set(V.Args.Output)
+	
+	'Get Real Cost ???
+	'f.Intrinsic.Math.Add(v.Local.fLabor,v.Local.fOverhead,v.Local.fHold)
+	'f.Intrinsic.Math.Add(v.Local.fHold,v.Local.fMaterial,v.Local.fHold)
+	'f.Intrinsic.Math.Add(v.Local.fHold,v.Local.fOutside,v.Local.fHold)
+	
+	'Pull data from v_BI_Bom_Buildup_E , where  Rec_Type = 'T' 
+	'EST_Labor_1 to 6, EST_Material_1 to 6, EST_Outside_1 to 6
+	f.Data.DataView.SetFilter("Router","RouterDV","Line_Type = 'M'")
+	f.Intrinsic.Control.If(v.DataView.Router!RouterDV.RowCount,>,0)
+		v.Local.fEst_Material_1.Set("1")
+		F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.Router!RouterDV(0).Part_WC!FieldValString)
+		V.Local.fEst_Material_2.Set(V.Args.Output)
+		F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.Router!RouterDV(0).NA1!FieldValString)
+		V.Local.fEst_Material_3.Set(V.Args.Output)
+		F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.Router!RouterDV(0).NA2!FieldValString)
+		V.Local.fEst_Material_4.Set(V.Args.Output)
+		F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.Router!RouterDV(0).Op_Code!FieldValString)
+		V.Local.fEst_Material_5.Set(V.Args.Output)
+		v.Local.fEst_Material_6.Set("1")
+		v.Local.fEst_Labor_1.Set("1")
+		F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.Router!RouterDV(0).Router!FieldValString)
+		V.Local.fEst_Labor_2.Set(V.Args.Output)
+		F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.Router!RouterDV(0).Qty!FieldValString)
+		V.Local.fEst_Labor_3.Set(V.Args.Output)
+		F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.Router!RouterDV(0).Seq!FieldValString)
+		V.Local.fEst_Labor_4.Set(V.Args.Output)
+		F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.Router!RouterDV(0).Seq_Type!FieldValString)
+		V.Local.fEst_Labor_5.Set(V.Args.Output)
+		v.Local.fEst_Labor_6.Set("1")
+		v.Local.fEst_Outside_1.Set("1")
+		F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.Router!RouterDV(0).Setup!FieldValString)
+		V.Local.fEst_Outside_2.Set(V.Args.Output)
+		F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.Router!RouterDV(0).RunTime!FieldValString)
+		V.Local.fEst_Outside_3.Set(V.Args.Output)
+		F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.Router!RouterDV(0).Rate!FieldValString)
+		V.Local.fEst_Outside_4.Set(V.Args.Output)
+		F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",v.DataView.Router!RouterDV(0).Freq!FieldValString)
+		V.Local.fEst_Outside_5.Set(V.Args.Output)
+		v.Local.fEst_Outside_6.Set("1")			
+	f.Intrinsic.Control.Else
+		v.Local.fEst_Labor_1.Set("0")	
+		v.Local.fEst_Labor_2.Set("0")
+		v.Local.fEst_Labor_3.Set("0")
+		v.Local.fEst_Labor_4.Set("0")
+		v.Local.fEst_Labor_5.Set("0")
+		v.Local.fEst_Labor_6.Set("0")
+		v.Local.fEst_Material_1.Set("0")
+		v.Local.fEst_Material_2.Set("0")
+		v.Local.fEst_Material_3.Set("0")
+		v.Local.fEst_Material_4.Set("0")
+		v.Local.fEst_Material_5.Set("0")
+		v.Local.fEst_Material_6.Set("0")
+		v.Local.fEst_Outside_1.Set("0")
+		v.Local.fEst_Outside_2.Set("0")
+		v.Local.fEst_Outside_3.Set("0")
+		v.Local.fEst_Outside_4.Set("0")
+		v.Local.fEst_Outside_5.Set("0")
+		v.Local.fEst_Outside_6.Set("0")
+	f.Intrinsic.Control.EndIf	
+	
+	'Pull Price from 1 to 4
+	'Calculate Price 1
+	f.Intrinsic.Math.Mult(v.Local.fMaterial,v.Local.fEst_Material_2,v.Local.fMaterial1)
+	f.Intrinsic.Math.Mult(v.Local.fLabor,v.Local.fEst_Labor_2,v.Local.fLabor1)	
+	f.Intrinsic.Math.Mult(v.Local.fOverhead,v.Local.fEst_Labor_2,v.Local.fOverhead1)
+	f.Intrinsic.Math.Mult(v.Local.fOutside,v.Local.fEst_Outside_2,v.Local.fOutside1)
+	
+	f.Intrinsic.Math.Add(v.Local.fMaterial1,v.Local.fLabor1,v.Local.fHold)
+	f.Intrinsic.Math.Add(v.Local.fOverhead1,v.Local.fHold,v.Local.fHold)
+	f.Intrinsic.Math.Add(v.Local.fOutside1,v.Local.fHold,v.Local.fHold)		
+	
+	F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",V.Local.fHold.String)
+	V.Local.fPrice1.Set(V.Args.Output)
+	
+	'Calculate Price 2
+	f.Intrinsic.Math.Mult(v.Local.fMaterial,v.Local.fEst_Material_3,v.Local.fMaterial2)
+	f.Intrinsic.Math.Mult(v.Local.fLabor,v.Local.fEst_Labor_3,v.Local.fLabor2)
+	f.Intrinsic.Math.Mult(v.Local.fOverhead,v.Local.fEst_Labor_3,v.Local.fOverhead2)
+	f.Intrinsic.Math.Mult(v.Local.fOutside,v.Local.fEst_Outside_3,v.Local.fOutside2)
+	
+	f.Intrinsic.Math.Add(v.Local.fMaterial2,v.Local.fLabor2,v.Local.fHold)
+	f.Intrinsic.Math.Add(v.Local.fOverhead2,v.Local.fHold,v.Local.fHold)
+	f.Intrinsic.Math.Add(v.Local.fOutside2,v.Local.fHold,v.Local.fHold)		
+	
+	F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",V.Local.fHold.String)
+	V.Local.fPrice2.Set(V.Args.Output)
+	
+	'Calculate Price 3
+	f.Intrinsic.Math.Mult(v.Local.fMaterial,v.Local.fEst_Material_4,v.Local.fMaterial3)
+	f.Intrinsic.Math.Mult(v.Local.fLabor,v.Local.fEst_Labor_4,v.Local.fLabor3)
+	f.Intrinsic.Math.Mult(v.Local.fOverhead,v.Local.fEst_Labor_4,v.Local.fOverhead3)
+	f.Intrinsic.Math.Mult(v.Local.fOutside,v.Local.fEst_Outside_4,v.Local.fOutside3)
+
+	f.Intrinsic.Math.Add(v.Local.fMaterial3,v.Local.fLabor3,v.Local.fHold)
+	f.Intrinsic.Math.Add(v.Local.fOverhead3,v.Local.fHold,v.Local.fHold)
+	f.Intrinsic.Math.Add(v.Local.fOutside3,v.Local.fHold,v.Local.fHold)		
+	
+	F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",V.Local.fHold.String)
+	V.Local.fPrice3.Set(V.Args.Output)
+	
+	'Calculate Price 4
+	f.Intrinsic.Math.Mult(v.Local.fMaterial,v.Local.fEst_Material_5,v.Local.fMaterial4)
+	f.Intrinsic.Math.Mult(v.Local.fLabor,v.Local.fEst_Labor_5,v.Local.fLabor4)
+	f.Intrinsic.Math.Mult(v.Local.fOverhead,v.Local.fEst_Labor_5,v.Local.fOverhead4)
+	f.Intrinsic.Math.Mult(v.Local.fOutside,v.Local.fEst_Outside_5,v.Local.fOutside4)
+	
+	f.Intrinsic.Math.Add(v.Local.fMaterial4,v.Local.fLabor4,v.Local.fHold)
+	f.Intrinsic.Math.Add(v.Local.fOverhead4,v.Local.fHold,v.Local.fHold)
+	f.Intrinsic.Math.Add(v.Local.fOutside4,v.Local.fHold,v.Local.fHold)		
+	
+	F.Intrinsic.Control.CallSub(RoundUpToNearestPenny,"Input",V.Local.fHold.String)
+	V.Local.fPrice4.Set(V.Args.Output)
+	
+	F.Intrinsic.Control.SelectCase(v.Screen.Form!ddlMarkUp.Text)
+		F.Intrinsic.Control.Case("1")
+			v.Local.fNew_List_Price.Set(v.Local.fPrice1)
+		F.Intrinsic.Control.Case("2")
+			v.Local.fNew_List_Price.Set(v.Local.fPrice2)
+		F.Intrinsic.Control.Case("3")
+			v.Local.fNew_List_Price.Set(v.Local.fPrice3)
+		F.Intrinsic.Control.Case("4")
+			v.Local.fNew_List_Price.Set(v.Local.fPrice4)
+	F.Intrinsic.Control.EndSelect
+
+	v.Local.fNew_Alt_Price.Set(v.Args.fOld_List_Price)
+	
+	v.Local.sHold.Set(v.Args.sPart.Trim)
+	v.Local.sShow.Set(v.Dictionary.NotShowInReportDict![v.Local.sHold])
+	'Will only display the parent part. The flag to decide to display in report will be from Inventory_Mst.Text_Info2
+	f.Intrinsic.Control.If(v.Local.sShow.Trim,<>,"N")		
+		v.Local.sName.Set(v.Screen.Form!txtNameCustomer.Text)
+		v.Local.sDescription.Set(v.Args.sDescription)
+		'Save the record to GCG_5447_Cost_Price
+		f.Intrinsic.String.build("Insert into GCG_5447_Cost_Price (TRMNL,UserID,Part,Description,Customer,Name,Old_List_Price,Old_Alt_Price,New_List_Price,New_Alt_Price,Cost,Material,Labor,Outside,Overhead,Freight,Other,Est_Labor1,Est_Labor_2,Est_Labor_3,Est_Labor_4,Est_Labor_5,Est_Labor_6,Est_Material_1,Est_Material_2,Est_Material_3,Est_Material_4,Est_Material_5,Est_Material_6,Est_Outside_1,Est_Outside_2,Est_Outside_3,Est_Outside_4,Est_Outside_5,Est_Outside_6,Price_1,Price_2,Price_3,Price_4,IsBom,GenDate,GenTime,PriceSelected) values ('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','{9}','{10}','{11}','{12}','{13}','{14}','{15}','{16}','{17}','{18}','{19}','{20}','{21}','{22}','{23}','{24}','{25}','{26}','{27}','{28}','{29}','{30}','{31}','{32}','{33}','{34}','{35}','{36}','{37}','{38}','{39}','{40}','{41}','{42}')",v.Caller.Terminal,v.Caller.User,v.Args.sPart,v.Local.sDescription.PSQLFriendly,v.Screen.Form!txtCustomer.Text,v.Local.sName.PSQLFriendly,v.Args.fOld_List_Price,v.Args.fOld_Alt_Price,v.Local.fNew_List_Price,v.Local.fNew_Alt_Price,v.Local.fCost,v.Local.fMaterial,v.Local.fLabor,v.Local.fOutside,v.Local.fOverhead,v.Local.fFreight,v.Local.fOther,v.Local.fEst_Labor_1,v.Local.fEst_Labor_2,v.Local.fEst_Labor_3,v.Local.fEst_Labor_4,v.Local.fEst_Labor_5,v.Local.fEst_Labor_6,v.Local.fEst_Material_1,v.Local.fEst_Material_2,v.Local.fEst_Material_3,v.Local.fEst_Material_4,v.Local.fEst_Material_5,v.Local.fEst_Material_6,v.Local.fEst_Outside_1,v.Local.fEst_Outside_2,v.Local.fEst_Outside_3,v.Local.fEst_Outside_4,v.Local.fEst_Outside_5,v.Local.fEst_Outside_6,v.Local.fPrice1,v.Local.fPrice2,v.Local.fPrice3,v.Local.fPrice4,"N",v.Global.iDate,v.Global.iTime,v.Screen.Form!ddlMarkUp.Text,v.Local.sSQL)
+		f.ODBC.Connection!conx.Execute(v.Local.sSQL)
+		
+		'Insert to history table
+		f.Intrinsic.String.build("Insert into GCG_5447_CostPrice_H(TRMNL,UserID,Part,Description,Customer,Name,Old_List_Price,Old_Alt_Price,New_List_Price,New_Alt_Price,Cost,Material,Labor,Outside,Overhead,Freight,Other,Est_Labor1,Est_Labor_2,Est_Labor_3,Est_Labor_4,Est_Labor_5,Est_Labor_6,Est_Material_1,Est_Material_2,Est_Material_3,Est_Material_4,Est_Material_5,Est_Material_6,Est_Outside_1,Est_Outside_2,Est_Outside_3,Est_Outside_4,Est_Outside_5,Est_Outside_6,Price_1,Price_2,Price_3,Price_4,IsBom,GenDate,GenTime,PriceSelected) values ('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','{9}','{10}','{11}','{12}','{13}','{14}','{15}','{16}','{17}','{18}','{19}','{20}','{21}','{22}','{23}','{24}','{25}','{26}','{27}','{28}','{29}','{30}','{31}','{32}','{33}','{34}','{35}','{36}','{37}','{38}','{39}','{40}','{41}','{42}')",v.Caller.Terminal,v.Caller.User,v.Args.sPart,v.Local.sDescription.PSQLFriendly,v.Screen.Form!txtCustomer.Text,v.Local.sName.PSQLFriendly,v.Args.fOld_List_Price,v.Args.fOld_Alt_Price,v.Local.fNew_List_Price,v.Local.fNew_Alt_Price,v.Local.fCost,v.Local.fMaterial,v.Local.fLabor,v.Local.fOutside,v.Local.fOverhead,v.Local.fFreight,v.Local.fOther,v.Local.fEst_Labor_1,v.Local.fEst_Labor_2,v.Local.fEst_Labor_3,v.Local.fEst_Labor_4,v.Local.fEst_Labor_5,v.Local.fEst_Labor_6,v.Local.fEst_Material_1,v.Local.fEst_Material_2,v.Local.fEst_Material_3,v.Local.fEst_Material_4,v.Local.fEst_Material_5,v.Local.fEst_Material_6,v.Local.fEst_Outside_1,v.Local.fEst_Outside_2,v.Local.fEst_Outside_3,v.Local.fEst_Outside_4,v.Local.fEst_Outside_5,v.Local.fEst_Outside_6,v.Local.fPrice1,v.Local.fPrice2,v.Local.fPrice3,v.Local.fPrice4,"N",v.Global.iDate,v.Global.iTime,v.Screen.Form!ddlMarkUp.Text,v.Local.sSQL)
+		f.ODBC.Connection!conx.Execute(v.Local.sSQL)
+
+	f.Intrinsic.Control.EndIf
+	
+	f.Data.DataTable.Close("Router")
+	
+	'Update new List Price and new Alt Price
+	f.Intrinsic.String.build("Update Inventory_Mstr set Amt_Price = '{0}' where Part = '{1}'",v.Local.fNew_List_Price,v.Args.sPart,v.Local.sSQL)
+	f.ODBC.Connection!conx.Execute(v.Local.sSQL)
+	f.Intrinsic.String.build("Update INV_ALT_PRICE set ALT_PRICE_1   = '{0}' where Part = '{1}'",v.Local.fNew_Alt_Price,v.Args.sPart,v.Local.sSQL)
+	f.ODBC.Connection!conx.Execute(v.Local.sSQL)		
+	'
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}GAB Version: {5}}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	f.Intrinsic.Control.CallSub("Unload")
+F.Intrinsic.Control.EndTry
+
+Program.Sub.Router_Cost_Buildup.End
+
+Program.Sub.Progress_UnLoad.Start
+gui.Progress..Visible(False)
+Program.Sub.Progress_UnLoad.End
+
+Program.Sub.ORDUPLCreateFile.Start
+F.Intrinsic.Control.Try
+	V.Local.sRet.Declare(String)
+	V.Local.iCount.Declare(Long)
+	V.Local.sFileContent.Declare(String)
+	V.Local.sFileName.Declare(String)
+	V.Local.sFilePath.Declare(String)
+	V.Local.sHeader.Declare(String)
+	V.Local.sExtra.Declare(String)
+	V.Local.sDelimiter.Declare(String)
+	V.Local.sDataViewContent.Declare(String)
+	
+	'First we are going to pad all the fields that are in the datatables with the data that is already in it.
+	'Header
+	F.Intrinsic.Control.For(V.Local.iCount,0,V.DataTable.ORDUPL.RowCount--,1)
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).Transaction!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"Transaction",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).CustomerNo!FieldVal," ",7,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"CustomerNo",V.Local.sRet)
+		
+		F.Intrinsic.String.LPad(V.DataTable.ORDUPL(V.Local.iCount).OrderNumber!FieldVal,"0",7,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"OrderNumber",V.Local.sRet)
+		
+		F.Intrinsic.String.LPad(V.DataTable.ORDUPL(V.Local.iCount).Freight!FieldVal,"0",10,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"Freight",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).TaxFreightFlag!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"TaxFreightFlag",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).FreightPerPiece!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"FreightPerPiece",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).OrderDueDate!FieldVal," ",8,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"OrderDueDate",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).OrderDate!FieldVal," ",8,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"OrderDate",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).UserField1Head!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"UserField1Head",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).UserField2Head!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"UserField2Head",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).UserField3Head!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"UserField3Head",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).UserField4Head!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"UserField4Head",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).UserField5Head!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"UserField5Head",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).UserId!FieldVal," ",8,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"UserId",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).CustomerPO!FieldVal," ",15,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"CustomerPO",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).Filler1!FieldVal," ",15,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"Filler1",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).FreightCurrFlag!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"FreightCurrFlag",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).DataType!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"DataType",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).ShipVia!FieldVal," ",20,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"ShipVia",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).Carrier!FieldVal," ",6,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"Carrier",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).ShipToName!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"ShipToName",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).ShipToAddress1!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"ShipToAddress1",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).ShipToAddress2!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"ShipToAddress2",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).ShipToAddress3!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"ShipToAddress3",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).ShipToCity!FieldVal," ",25,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"ShipToCity",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).ShipToState!FieldVal," ",2,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"ShipToState",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).ShipToZip!FieldVal," ",13,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"ShipToZip",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).ShipToCountry!FieldVal," ",3,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"ShipToCountry",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).ShipToAttention!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"ShipToAttention",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).Filler2!FieldVal," ",11,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"Filler2",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).OrderType!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"OrderType",V.Local.sRet)
+		
+		F.Intrinsic.String.LPad(V.DataTable.ORDUPL(V.Local.iCount).OrderDiscPercentage!FieldVal,"0",5,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"OrderDiscPercentage",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).Salesman!FieldVal," ",3,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"Salesman",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).Filler3!FieldVal," ",75,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"Filler3",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).OverrideAutoNumbering!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"OverrideAutoNumbering",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).ShipToID!FieldVal," ",6,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"ShipToID",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).MarkShipment!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"MarkShipment",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).ContactName!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"ContactName",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPL(V.Local.iCount).Filler4!FieldVal," ",87,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPL",V.Local.iCount,"Filler4",V.Local.sRet)
+		
+	F.Intrinsic.Control.Next(V.Local.iCount)
+	
+	'Extra
+	F.Intrinsic.Control.For(V.Local.iCount,0,V.DataTable.ORDUPLExtra.RowCount--,1)
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ShipToInternationalFlag!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ShipToInternationalFlag",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ShipToName!FieldVal," ",40,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ShipToName",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ShipToAddress1!FieldVal," ",40,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ShipToAddress1",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ShipToAddress2!FieldVal," ",40,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ShipToAddress2",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ShipToAddress3!FieldVal," ",40,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ShipToAddress3",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ShipToAddress4!FieldVal," ",40,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ShipToAddress4",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ShipToAddress5!FieldVal," ",40,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ShipToAddress5",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ShipToCity!FieldVal," ",25,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ShipToCity",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ShipToState!FieldVal," ",2,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ShipToState",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ShipToZip!FieldVal," ",13,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ShipToZip",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ShipToCountry!FieldVal," ",25,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ShipToCountry",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ShipToAttention!FieldVal," ",40,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ShipToAttention",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).BillToInternationalFlag!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"BillToInternationalFlag",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).BillToName!FieldVal," ",40,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"BillToName",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).BillToAddress1!FieldVal," ",40,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"BillToAddress1",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).BillToAddress2!FieldVal," ",40,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"BillToAddress2",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).BillToAddress3!FieldVal," ",40,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"BillToAddress3",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).BillToAddress4!FieldVal," ",40,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"BillToAddress4",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).BillToAddress5!FieldVal," ",40,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"BillToAddress5",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).BillToCity!FieldVal," ",25,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"BillToCity",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).BillToState!FieldVal," ",2,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"BillToState",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).BillToZip!FieldVal," ",13,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"BillToZip",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).BillToCountry!FieldVal," ",25,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"BillToCountry",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).BillToAttention!FieldVal," ",40,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"BillToAttention",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ContactEmail!FieldVal," ",100,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ContactEmail",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ContactPhone!FieldVal," ",20,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ContactPhone",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ExtraTextLine1!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ExtraTextLine1",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ExtraTextLine2!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ExtraTextLine2",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ExtraTextLine3!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ExtraTextLine3",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ExtraTextLine4!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ExtraTextLine4",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ExtraTextLine5!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ExtraTextLine5",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ExtraTextLine6!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ExtraTextLine6",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ExtraTextLine7!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ExtraTextLine7",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ExtraTextLine8!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ExtraTextLine8",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ExtraTextLine9!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ExtraTextLine9",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ExtraTextLine10!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ExtraTextLine10",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).TextPosition!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"TextPosition",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ApplyTextToSalesOrder!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ApplyTextToSalesOrder",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ApplyTextToPackList!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ApplyTextToPackList",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ApplyTextToInvoice!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ApplyTextToInvoice",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ApplyTextToQuote!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ApplyTextToQuote",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ApplyTextToRouter!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ApplyTextToRouter",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).ApplyTextToWO!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"ApplyTextToWO",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).OrderSort!FieldVal," ",20,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"OrderSort",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).OrderSort2!FieldVal," ",20,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"OrderSort2",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLExtra(V.Local.iCount).Filler!FieldVal," ",1960,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLExtra",V.Local.iCount,"Filler",V.Local.sRet)
+		
+	F.Intrinsic.Control.Next(V.Local.iCount)
+	
+	'Lines
+	F.Intrinsic.Control.For(V.Local.iCount,0,V.DataTable.ORDUPLLines.RowCount--,1)
+		F.Intrinsic.String.LPad(V.DataTable.ORDUPLLines(V.Local.iCount).LineNumber!FieldVal,"0",3,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"LineNumber",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).Filler1!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"Filler1",V.Local.sRet)
+		
+		F.Intrinsic.String.LPad(V.DataTable.ORDUPLLines(V.Local.iCount).QtyOrdered!FieldVal,"0",13,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"QtyOrdered",V.Local.sRet)
+		
+		F.Intrinsic.String.LPad(V.DataTable.ORDUPLLines(V.Local.iCount).Weight!FieldVal,"0",10,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"Weight",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).UM!FieldVal," ",2,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"UM",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).PartNumber!FieldVal," ",17,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"PartNumber",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).PartRev!FieldVal," ",3,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"PartRev",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).Filler2!FieldVal," ",18,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"Filler2",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).PartLoc!FieldVal," ",2,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"PartLoc",V.Local.sRet)
+		
+		F.Intrinsic.String.LPad(V.DataTable.ORDUPLLines(V.Local.iCount).QuotedPrice!FieldVal,"0",16,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"QuotedPrice",V.Local.sRet)
+		
+		F.Intrinsic.String.LPad(V.DataTable.ORDUPLLines(V.Local.iCount).OverridePrice!FieldVal,"0",16,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"OverridePrice",V.Local.sRet)
+		
+		F.Intrinsic.String.LPad(V.DataTable.ORDUPLLines(V.Local.iCount).Cost!FieldVal,"0",16,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"Cost",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).PartDesc!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"PartDesc",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).PL!FieldVal," ",3,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"PL",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).LineOrderDate!FieldVal," ",8,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"LineOrderDate",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).LinePromiseDate!FieldVal," ",8,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"LinePromiseDate",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).UserField1!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"UserField1",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).UserField2!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"UserField2",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).UserField3!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"UserField3",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).UserField4!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"UserField4",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).UserField5!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"UserField5",V.Local.sRet)
+		
+		F.Intrinsic.String.LPad(V.DataTable.ORDUPLLines(V.Local.iCount).Extension!FieldVal,"0",16,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"Extension",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).NoDeliveryBeforeDate!FieldVal," ",8,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"NoDeliveryBeforeDate",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).MustDeliverByDate!FieldVal," ",8,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"MustDeliverByDate",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).DataType!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"DataType",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).TextLine1!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"TextLine1",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).TextLine2!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"TextLine2",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).TextLine3!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"TextLine3",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).TextLine4!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"TextLine4",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).TextLine5!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"TextLine5",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).TextLine6!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"TextLine6",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).TextLine7!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"TextLine7",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).TextLine8!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"TextLine8",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).TextLine9!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"TextLine9",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).TextLine10!FieldVal," ",30,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"TextLine10",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).TaxStatusFlag!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"TaxStatusFlag",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).LineType!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"LineType",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).NegativeFlag!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"NegativeFlag",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).PriceFlag!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"PriceFlag",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).SufficientInvCheck!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"SufficientInvCheck",V.Local.sRet)
+		
+		F.Intrinsic.String.LPad(V.DataTable.ORDUPLLines(V.Local.iCount).SurveyNo!FieldVal,"0",8,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"SurveyNo",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).RouterValFlag!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"RouterValFlag",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).Router!FieldVal," ",20,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"Router",V.Local.sRet)
+		
+		F.Intrinsic.String.LPad(V.DataTable.ORDUPLLines(V.Local.iCount).RouterSeq!FieldVal,"0",6,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"RouterSeq",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).StockXRef!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"StockXRef",V.Local.sRet)
+		
+		F.Intrinsic.String.LPad(V.DataTable.ORDUPLLines(V.Local.iCount).OriginalOrd!FieldVal,"0",7,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"OriginalOrd",V.Local.sRet)
+		
+		F.Intrinsic.String.LPad(V.DataTable.ORDUPLLines(V.Local.iCount).OriginalLine!FieldVal,"0",3,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"OriginalLine",V.Local.sRet)
+		
+		F.Intrinsic.String.LPad(V.DataTable.ORDUPLLines(V.Local.iCount).Length!FieldVal,"0",12,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"Length",V.Local.sRet)
+		
+		F.Intrinsic.String.LPad(V.DataTable.ORDUPLLines(V.Local.iCount).Width!FieldVal,"0",12,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"Width",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).CurrFlag!FieldVal," ",1,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"CurrFlag",V.Local.sRet)
+		
+		F.Intrinsic.String.LPad(V.DataTable.ORDUPLLines(V.Local.iCount).OrderDiscPercentage!FieldVal,"0",5,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"OrderDiscPercentage",V.Local.sRet)
+		
+		F.Intrinsic.String.RPad(V.DataTable.ORDUPLLines(V.Local.iCount).Filler3!FieldVal," ",86,V.Local.sRet)
+		F.Data.DataTable.SetValue("ORDUPLLines",V.Local.iCount,"Filler3",V.Local.sRet)
+		
+	F.Intrinsic.Control.Next(V.Local.iCount)
+	
+	'The file format that ORDUPL requires is HEADER-Line-EXTRA, where HEADER and EXTRA are the same every line. To accomplish this we will make a very strange outer delimter which we will use with the DataView.ToString method.
+	'The delimiter will be EXTRA+New Line+HEADER. This will create a string which has exactly what we need for the file content except there will be no HEADER at the beginning and no EXTRA at the end. We will just append those manually.
+	
+	'Here we extract the HEADER and EXTRA from the datatables.
+	F.Data.DataView.Create("ORDUPL","ORDUPLView",22)
+	F.Data.DataView.ToString("ORDUPL","ORDUPLView","",V.Ambient.NewLine,V.Local.sHeader)
+	F.Data.DataView.Close("ORDUPL","ORDUPLView")
+	
+	F.Data.DataView.Create("ORDUPLExtra","ORDUPLExtraView",22)
+	F.Data.DataView.ToString("ORDUPLExtra","ORDUPLExtraView","",V.Ambient.NewLine,V.Local.sExtra)
+	F.Data.DataView.Close("ORDUPLExtra","ORDUPLExtraView")
+	
+	'And now we create the delimiter 
+	F.Intrinsic.String.Build("{0}{1}{2}",V.Local.sExtra,V.Ambient.NewLine,V.Local.sHeader,V.Local.sDelimiter)
+	
+	'Extract data for lines using the appropriate delimiter
+	F.Data.DataView.Create("ORDUPLLines","ORDUPLLinesView",22)
+	F.Data.DataView.ToString("ORDUPLLines","ORDUPLLinesView","",V.Local.sDelimiter,V.Local.sFileContent)
+	F.Data.DataView.Close("ORDUPLLines","ORDUPLLinesView")
+	
+	'And now manually append HEADER AND EXTRA to the file content since the first row won't have the HEADER and the last row won't have the EXTRA
+	F.Intrinsic.String.Build("{0}{1}{2}",V.Local.sHeader,V.Local.sFileContent,V.Local.sExtra,V.Local.sFileContent)
+	
+	'Now we need to write the file with a unique file name. We use customer name+date+time in the file name to accomplish this. If we happen to clash with another order then the writefile sub will prevent us from overwriting the existing file
+	F.Intrinsic.String.StripCharacters(V.Ambient.Now,V.Local.sFileName)
+	F.Intrinsic.String.Build("{0}\{1}{2}",v.Global.sWebImporter,V.DataTable.ORDUPL(0).CustomerNo!FieldValTrim,V.Local.sFileName,V.Local.sFileName)
+
+	F.Intrinsic.File.String2File(V.Local.sFileName,V.Local.sFileContent)
+	F.Data.DataTable.DeleteRow("ORDUPL")
+	F.Data.DataTable.DeleteRow("ORDUPLLines")
+	F.Data.DataTable.DeleteRow("ORDUPLExtra")
+	f.Data.DataTable.AcceptChanges("ORDUPL")
+	f.Data.DataTable.AcceptChanges("ORDUPLLines")
+	f.Data.DataTable.AcceptChanges("ORDUPLLines")	
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(CatchErrorORDUPL, "Sub", V.Ambient.CurrentSubroutine, "ErrNo", V.Ambient.ErrorNumber, "ErrDesc", V.Ambient.ErrorDescription)
+F.Intrinsic.Control.EndTry
+Program.Sub.ORDUPLCreateFile.End
+
+Program.Sub.RoundUpToNearestPenny.Start
+'V.Args.Input - String
+V.Local.fOutput.Declare
+
+F.Intrinsic.Control.If(V.Args.Input.IsNumeric)
+	F.Intrinsic.Control.If(V.Args.Input.Float,<>,0)
+		F.Intrinsic.Math.Mult(V.Args.Input.Float,100,V.Local.fOutput)
+		F.Intrinsic.Math.Ceiling(V.Local.fOutput,V.Local.fOutput)
+		F.Intrinsic.Math.Div(V.Local.fOutput,100,V.Local.fOutput)
+		F.Intrinsic.String.Format(V.Local.fOutput,"0.00",V.Local.fOutput)
+	F.Intrinsic.Control.Else
+		V.Local.fOutput.Set(0)
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.Else
+	V.Local.fOutput.Set(0)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Variable.AddRV("Output",V.Local.fOutput)
+Program.Sub.RoundUpToNearestPenny.End
+
+Program.Sub.Comments.Start
+${$5$}$2.0.0.0$}$2
+${$6$}$bbaker$}$20231004142145967$}$pM7xsHplA2E9VCTenDTJ47gi1rF/t66WUbu3t0BBTYhJgiu84qfi4gD9I7iIsSxyGQtdZDQziiM=
+Program.Sub.Comments.End
