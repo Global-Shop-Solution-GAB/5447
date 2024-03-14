@@ -1,0 +1,145 @@
+Program.Sub.ScreenSU.Start
+Gui.Form..Create
+Gui.Form..Caption("Run Compare Price from Bom/Router Cost Buildup")
+Gui.Form..Size(11130,2220)
+Gui.Form..MinX(0)
+Gui.Form..MinY(0)
+Gui.Form..Position(0,0)
+Gui.Form..BackColor(-2147483633)
+Gui.Form..MousePointer(0)
+Gui.Form..Event(UnLoad,Form_UnLoad)
+Gui.Form.txtUserID.Create(TextBox,"",True,765,300,0,210,660,False,0,"Arial",8,-2147483643,1)
+Gui.Form.lbl1.Create(Label,"User ID",True,765,255,0,210,435,True,0,"Arial",8,-2147483633,0)
+Gui.Form.lbl2.Create(Label,"Terminal",True,720,255,0,1140,435,True,0,"Arial",8,-2147483633,0)
+Gui.Form.lbl3.Create(Label,"Customer",True,900,255,0,1980,435,True,0,"Arial",8,-2147483633,0)
+Gui.Form.lbl4.Create(Label,"Name",True,585,255,0,2955,435,True,0,"Arial",8,-2147483633,0)
+Gui.Form.lbl5.Create(Label,"Gen. Date",True,900,255,0,5565,435,True,0,"Arial",8,-2147483633,0)
+Gui.Form.lbl6.Create(Label,"Gen. Time",True,900,255,0,6600,435,True,0,"Arial",8,-2147483633,0)
+Gui.Form.lbl7.Create(Label,"Price",True,600,255,0,7635,435,True,0,"Arial",8,-2147483633,0)
+Gui.Form.lbl8.Create(Label,"Quote Number",True,1200,255,0,8370,435,True,0,"Arial",8,-2147483633,0)
+Gui.Form.txtTRMNL.Create(TextBox,"",True,660,300,0,1140,660,False,0,"Arial",8,-2147483643,1)
+Gui.Form.txtCustomer.Create(TextBox,"",True,810,300,0,1995,660,False,0,"Arial",8,-2147483643,1)
+Gui.Form.txtName.Create(TextBox,"",True,2445,300,0,2970,660,False,0,"Arial",8,-2147483643,1)
+Gui.Form.txtGenDate.Create(TextBox,"",True,810,300,0,5580,660,False,0,"Arial",8,-2147483643,1)
+Gui.Form.txtGenTime.Create(TextBox,"",True,810,300,0,6615,660,False,0,"Arial",8,-2147483643,1)
+Gui.Form.txtPriceSelected.Create(TextBox,"",True,495,300,0,7650,660,False,0,"Arial",8,-2147483643,1)
+Gui.Form.txtQuoteNumber.Create(TextBox,"",True,810,300,0,8385,660,False,0,"Arial",8,-2147483643,1)
+Gui.Form.cmdBrowseSelection.Create(Button)
+Gui.Form.cmdBrowseSelection.Size(855,375)
+Gui.Form.cmdBrowseSelection.Position(9840,600)
+Gui.Form.cmdBrowseSelection.Caption("^")
+Gui.Form.cmdBrowseSelection.Event(Click,cmdBrowseSelection_Click)
+Gui.Form.cmdRun.Create(Button)
+Gui.Form.cmdRun.Size(855,375)
+Gui.Form.cmdRun.Position(165,1215)
+Gui.Form.cmdRun.Caption("Run")
+Gui.Form.cmdRun.Event(Click,cmdRun_Click)
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+'BN, April 2019
+'Customer: Hy-flex Corporation
+'We have inventory parts that all have routers. Some inventory parts also have a bom.
+'By selecting a Customer and a Price markup, we can rebuild the cost for the Router/Bom for this customer.
+'1/If that Part has a Bom, the Bom cost buildup will be run, otherwise, the Router cost buildup.
+'2/After running the cost buildup, a quote will be generated for that customer, then 2 compare price reports will be generated.
+'3/From custom menu item where user can select and run a the 2 compare price reports again which is done by retrieving data from a history custom table.
+
+'This script will do the #3 item
+f.Intrinsic.Control.Try
+	v.Local.sError.Declare
+	
+	f.ODBC.Connection!conx.OpenCompanyConnection	
+	gui.Form..Show
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}Subroutine: {2}{1}Subroutine called from:{6}{1}Error Occurred: {3}{1}Description: {4}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,v.Ambient.SubroutineCalledFrom,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	f.Intrinsic.Control.CallSub("Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.Main.End
+
+Program.Sub.cmdBrowseSelection_Click.Start
+'Browse Selection
+F.Intrinsic.Control.Try
+	V.Local..BulkDeclareString(sError,sRet)
+	
+	F.Intrinsic.UI.SetBrowserHotTypeAhead(True)
+	F.Intrinsic.UI.Browser("Selection","conx","Select Distinct UserID, TRMNL,Customer,Name,GenDate,GenTime,PriceSelected,QuoteNumber from GCG_5447_CostPrice_H order by UserID,TRMNL,Customer,GenDate desc,GenTime desc","UserID*!*Terminal*!*Customer*!*Name*!*GenDate*!*GenTime*!*PriceSelected*!*QuoteNumber","400*!*400*!*400*!*2000*!*400*!*400*!*500*!*600",V.Local.sRet)
+	F.Intrinsic.Control.If(V.Local.sRet.IsCancel,=,False)
+		F.Intrinsic.String.Split(V.Local.sRet,"*!*",V.Local.sRet)
+		gui.Form.txtUserID.Text(v.Local.sRet(0))
+		gui.Form.txtTRMNL.Text(v.Local.sRet(1))
+		gui.Form.txtCustomer.Text(v.Local.sRet(2))
+		gui.Form.txtName.Text(v.Local.sRet(3))
+		gui.Form.txtGenDate.Text(v.Local.sRet(4))
+		gui.Form.txtGenTime.Text(v.Local.sRet(5))
+		gui.Form.txtPriceSelected.Text(v.Local.sRet(6))
+		gui.Form.txtQuoteNumber.Text(v.Local.sRet(7))
+	F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}GAB Version: {5}}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	f.Intrinsic.Control.CallSub("Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.cmdBrowseSelection_Click.End
+
+Program.Sub.cmdRun_Click.Start
+f.Intrinsic.Control.Try
+	v.Local..BulkDeclareLong(iBIRunID,iRptID,iBILogID)
+	v.Local..BulkDeclareString(sError,sVal)
+		
+		f.Intrinsic.UI.InvokeWaitDialog("Preparing report - Old Price/New Price Percentage Change...")
+		'Log Report		
+		F.Global.BI.GetRunID(v.Local.iBIRunID)
+		f.Global.BI.GetIDFromName("GCG_5447_ComparePrice_H.rpt",True,v.Local.iRptID)
+		F.Global.BI.StartLogging(v.Local.iBIRunID,v.Local.iRptID,-1,"",v.Local.iBILogID)	
+		'Stop Logging
+		F.Global.BI.StopLogging(v.Local.iBILogID)
+		f.Intrinsic.String.Build("{0}*!*{1}*!*{2}*!*{3}*!*{4}*!*{5}*!*{6}*!*{7}",v.Screen.Form!txtUserID.Text,v.Screen.Form!txtTRMNL.Text,v.Screen.Form!txtCustomer.text,v.Screen.Form!txtName.Text,v.Screen.Form!txtGenDate.Text,v.Screen.Form!txtGenTime.Text,v.Screen.Form!txtPriceSelected.text,v.Screen.Form!txtQuoteNumber.Text,v.Local.sVal)
+		
+		f.Intrinsic.UI.CloseWaitDialog
+		F.Global.BI.RunReportPreProcessor(v.Local.iBIRunID,v.Local.iBILogID,"UserID*!*TRMNL*!*Customer*!*NameCustomer*!*GenDate*!*GenTime*!*PriceSelected*!*QuoteNumber",V.Local.sVal,"",-1,False,"",-1,"",-1,"","",v.Local.iBIRunID)
+		
+		f.Intrinsic.UI.InvokeWaitDialog("Preparing report - Old Price/New Material + Markup...")
+		'Run Report for Material Markup
+		'Log report
+		F.Global.BI.GetRunID(v.Local.iBIRunID)
+		f.Global.BI.GetIDFromName("GCG_5447_ComparePriceMat_H.rpt",True,v.Local.iRptID)
+		F.Global.BI.StartLogging(v.Local.iBIRunID,v.Local.iRptID,-1,"",v.Local.iBILogID)	
+		'Stop Logging
+		F.Global.BI.StopLogging(v.Local.iBILogID)
+		F.Global.BI.RunReportPreProcessor(v.Local.iBIRunID,v.Local.iBILogID,"UserID*!*TRMNL*!*Customer*!*NameCustomer*!*GenDate*!*GenTime*!*PriceSelected*!*QuoteNumber",V.Local.sVal,"",-1,False,"",-1,"",-1,"","",v.Local.iBIRunID)
+		f.Intrinsic.UI.CloseWaitDialog
+	
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	f.Intrinsic.Control.CallSub("Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.cmdRun_Click.End
+
+Program.Sub.Form_UnLoad.Start
+f.Intrinsic.Control.CallSub("Unload")
+Program.Sub.Form_UnLoad.End
+
+Program.Sub.UnLoad.Start
+f.Intrinsic.Control.Try
+	v.Local.sError.Declare
+
+	F.Intrinsic.Control.If(V.ODBC.conx.State,=,1)
+		F.ODBC.Connection!conx.close
+	F.Intrinsic.Control.EndIf
+	
+	f.Intrinsic.Control.End
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}Subroutine: {2}{1}Subroutine called from:{6}{1}Error Occurred: {3}{1}Description: {4}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,v.Ambient.SubroutineCalledFrom,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End	
+F.Intrinsic.Control.EndTry
+Program.Sub.UnLoad.End
